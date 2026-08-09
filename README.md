@@ -15,6 +15,11 @@ Open the GitHub Pages site to inspect dataset samples in table form.
 - Validation: 148
 - Reserved: 77
 
+We use the new format for JSON:
+
+<img width="660" height="585" alt="image" src="https://github.com/user-attachments/assets/a46fe294-f153-4a69-9f52-1655a4fd82a5" />
+
+
 ## Main task
 
 Russian natural-language robot command → Unitree G1 motion JSON plan.
