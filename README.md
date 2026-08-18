@@ -1,6 +1,6 @@
 # Qwen Robot Action Dataset Preview
 
-![Unitree G1 action preview](assets/robot-action-preview.gif)
+![Unitree G1 action preview](assets/robot-action-preview.webp)
 
 Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT dataset.
 
