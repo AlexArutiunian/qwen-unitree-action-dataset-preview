@@ -1,5 +1,7 @@
 # Qwen Robot Action Dataset Preview
 
+![Unitree G1 action preview](assets/robot-action-preview.gif)
+
 Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT dataset.
 
 The full dataset is intended for LoRA/QLoRA fine-tuning of Qwen-family models on structured robot motion JSON generation.
