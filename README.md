@@ -1,35 +1,41 @@
-# Qwen Robot Action Dataset Preview
+# nanoVLM training and visual verification
 
-![Unitree G1 action preview](assets/robot-action-preview.webp)
+This branch preserves the nanoVLM training, MCQ evaluation and plotting code associated with visual verification in the DCNA 2026 Unitree G1 pipeline.
 
-Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT dataset.
+The dataset preview inherited from `main` remains in place. The recovered server code is organized under [`training/nanovlm`](training/nanovlm).
 
-The full dataset is intended for LoRA/QLoRA fine-tuning of Qwen-family models on structured robot motion JSON generation.
+## Layout
 
-## Preview
+```text
+training/nanovlm/
+├── train/            # three recovered MCQ fine-tuning entrypoints
+├── evaluation/       # inference, comparison and paper-plot code
+├── dataset_tools/    # RobotVQA/robot MCQ preparation utilities
+├── upstream/nanoVLM # model architecture and upstream training code
+└── archive/          # remaining server experiment scripts, kept for provenance
+```
 
-Open the GitHub Pages site to inspect dataset samples in table form.
+No images, videos, datasets, virtual environments or model weights are committed.
 
-## Dataset summary
+## Typical invocation
 
-- Total samples: 1626
-- Train: 1401
-- Validation: 148
-- Reserved: 77
+Run from `training/nanovlm` and point the wrapper at the bundled model implementation:
 
-We use the new format for JSON:
+```bash
+python train/train_nanovlm_image_mcq.py \
+  --train-dataset-dir /path/to/train \
+  --val-dataset-dir /path/to/val \
+  --model-dir /path/to/base-or-checkpoint \
+  --repo-dir upstream/nanoVLM \
+  --work-dir runs/robot-mcq
+```
 
-<img width="660" height="585" alt="image" src="https://github.com/user-attachments/assets/a46fe294-f153-4a69-9f52-1655a4fd82a5" />
+## Freeze-policy provenance note
 
+The recovered `train_nanovlm_image_mcq.py` first freezes every parameter, then enables the MCQ head, modality projector and the requested final decoder layers. The vision encoder stays frozen. `train_nanovlm_image_mcq_fuller.py` additionally allows final vision layers to be enabled, but defaults to zero such layers.
 
-## Main task
+This does **not** exactly match the revised paper wording that both the vision encoder and modality projector were frozen. No separate server script implementing that exact combination was found during the 2026-09-04 inventory. The recovered code is kept unchanged so the repository records what actually existed on the server.
 
-Russian natural-language robot command → Unitree G1 motion JSON plan.
+The reported `74.85% (857/1,145)` artifact was also not found verbatim. The closest paper-plot source currently points to an 861-example evaluation (`613/861`, 71.20%). This discrepancy should be resolved before claiming full reproduction.
 
-## Files
-
-- `index.html` — static dataset preview.
-- `robot_sft_preview.csv` — CSV preview table.
-
-The full training files should be hosted separately on Hugging Face.
-https://huggingface.co/datasets/AlexArutiunian/g1-json-to-action/
+See [`REMOTE_ARTIFACTS.md`](training/nanovlm/REMOTE_ARTIFACTS.md) for paths to the uncommitted checkpoints.
