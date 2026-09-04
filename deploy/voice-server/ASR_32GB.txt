@@ -1,0 +1,15 @@
+Recommended for RTX 5090 / 32 GB VRAM:
+
+LLM:
+  ollama pull huihui_ai/qwen3-vl-abliterated:8b
+
+ASR config:
+  asr_model      = large-v3
+  asr_device     = cuda
+  asr_compute    = float16
+  asr_beam_size  = 3
+  asr_vad_filter = false
+
+Fastest fallback:
+  asr_model = large-v3-turbo
+  asr_beam_size = 1

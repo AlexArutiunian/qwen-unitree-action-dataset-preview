@@ -1,0 +1,21 @@
+{
+  "bind": "0.0.0.0",
+  "port": 8765,
+  "token_env": "ROBOT_VOICE_TOKEN",
+  "ollama_url": "http://127.0.0.1:11434",
+  "model": "huihui_ai/qwen3-vl-abliterated:8b",
+  "temperature": 0.6,
+  "num_ctx": 4096,
+  "num_predict": 1024,
+  "asr_model": "large-v3",
+  "asr_device": "cuda",
+  "asr_compute": "float16",
+  "language": "ru",
+  "tts_voice": "M1",
+  "tts_speed": 1.05,
+  "tts_steps": 6,
+  "audio_chunk_ms": 80,
+  "max_history_messages": 20,
+  "asr_beam_size": 3,
+  "asr_vad_filter": false
+}

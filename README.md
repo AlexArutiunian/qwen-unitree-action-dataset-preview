@@ -1,35 +1,18 @@
-# Qwen Robot Action Dataset Preview
+# Real-robot deployment
 
-![Unitree G1 action preview](assets/robot-action-preview.webp)
+This branch is reserved for the real Unitree G1 deployment layer of the Voice-to-JSON pipeline. The static dataset preview inherited from `main` is intentionally retained.
 
-Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT dataset.
+The first recovered component is [`deploy/voice-server`](deploy/voice-server): a small speech-recognition server copied from `/home/arutiunyan_ag/g1_voice_best` on 2026-09-04. Its virtual environment, caches and ASR model files were not copied.
 
-The full dataset is intended for LoRA/QLoRA fine-tuning of Qwen-family models on structured robot motion JSON generation.
+Planned additions include:
 
-## Preview
+- robot-side SDK transport and lifecycle handling;
+- JSON schema and joint-limit validation;
+- IK feasibility checks and rejection/refinement routing;
+- timing and rapid-arm-motion safety gates;
+- simulation/real configuration separation;
+- execution logging and visual post-action verification.
 
-Open the GitHub Pages site to inspect dataset samples in table form.
+The recovered voice service should be reviewed and normalized before production use. In particular, deployment addresses and model paths currently come from its historical server configuration.
 
-## Dataset summary
-
-- Total samples: 1626
-- Train: 1401
-- Validation: 148
-- Reserved: 77
-
-We use the new format for JSON:
-
-<img width="660" height="585" alt="image" src="https://github.com/user-attachments/assets/a46fe294-f153-4a69-9f52-1655a4fd82a5" />
-
-
-## Main task
-
-Russian natural-language robot command → Unitree G1 motion JSON plan.
-
-## Files
-
-- `index.html` — static dataset preview.
-- `robot_sft_preview.csv` — CSV preview table.
-
-The full training files should be hosted separately on Hugging Face.
-https://huggingface.co/datasets/AlexArutiunian/g1-json-to-action/
+Only the server half existed in the recovered `g1_voice_best` directory. The robot-side client described by its historical README was not present on that server and is therefore not included in this branch.

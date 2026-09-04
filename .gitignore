@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+*.wav
+*.mp3
+*.onnx
+*.safetensors
+*.pt
+*.pth
+models/
+logs/
