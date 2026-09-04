@@ -1,0 +1,49 @@
+project_root: .
+run_name: compact_8192_smoke
+output_dir: outputs/compact_8192_smoke
+model_name: Qwen/Qwen2.5-Coder-7B-Instruct
+prompt_mode: compact
+max_seq_length: 8192
+max_new_tokens: 768
+seed: 42
+cuda_visible_devices: "0"
+bnb_4bit_compute_dtype: float16
+
+dataset:
+  repo_id: AlexArutiunian/qwen-robot-action-dataset
+  repo_type: dataset
+  revision: main
+  files:
+    - robot_sft.parquet
+    - robot_spec_joints-only.txt
+  parquet_file: robot_sft.parquet
+  spec_file: robot_spec_joints-only.txt
+  hf_cache_dir: outputs/hf_downloaded_dataset
+  work_dir: outputs/dataset_compact_8192
+  val_ratio: 0.10
+  reserved_source_ids: [1,2,3,4,5,6,7,8,9,10,11]
+
+lora:
+  r: 4
+  alpha: 16
+  dropout: 0.05
+  target_modules: ["q_proj","v_proj"]
+
+training:
+  max_steps: 50
+  num_train_epochs: 1
+  batch_size: 1
+  eval_batch_size: 1
+  grad_accum: 16
+  learning_rate: 0.0002
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  logging_steps: 1
+  eval_steps: 10
+  save_steps: 10
+  save_total_limit: 3
+  early_stopping_patience: 4
+  early_stopping_threshold: 0.001
+  optim: paged_adamw_8bit
+  report_to: ["tensorboard"]
+  dataloader_num_workers: 0

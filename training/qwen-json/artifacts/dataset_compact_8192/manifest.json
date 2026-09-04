@@ -1,0 +1,87 @@
+{
+  "created_at": "2026-05-10T09:10:00+00:00",
+  "repo_id": "AlexArutiunian/qwen-robot-action-dataset",
+  "repo_type": "dataset",
+  "parquet_input": "/home/arutiunyan_ag/alut/qwen_lora/outputs/hf_downloaded_dataset/robot_sft.parquet",
+  "spec_input": "/home/arutiunyan_ag/alut/qwen_lora/outputs/hf_downloaded_dataset/robot_spec_joints-only.txt",
+  "normalized_parquet": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/robot_sft.parquet",
+  "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "prompt_mode": "compact",
+  "max_seq_length": 8192,
+  "used_existing_split": true,
+  "rows": {
+    "train": 1401,
+    "val": 148,
+    "reserved": 77
+  },
+  "filtered_rows": {
+    "train": 1401,
+    "val": 148,
+    "reserved": 77
+  },
+  "token_stats": {
+    "n": 1626,
+    "min": 856,
+    "p50": 1139,
+    "p90": 1956,
+    "p95": 3194,
+    "p99": 6514,
+    "max": 6585,
+    "mean": 1433.6906519065192
+  },
+  "dropped_rows": 0,
+  "report_summary": {
+    "max_seq_length": 8192,
+    "splits": [
+      {
+        "split": "reserved",
+        "rows": 77,
+        "kept": 77,
+        "dropped": 0,
+        "max_seq_length": 8192,
+        "min_tokens": 902,
+        "p50_tokens": 930,
+        "p90_tokens": 986,
+        "p95_tokens": 992,
+        "p99_tokens": 998,
+        "max_tokens": 1000
+      },
+      {
+        "split": "train",
+        "rows": 1401,
+        "kept": 1401,
+        "dropped": 0,
+        "max_seq_length": 8192,
+        "min_tokens": 856,
+        "p50_tokens": 1182,
+        "p90_tokens": 2169,
+        "p95_tokens": 3336,
+        "p99_tokens": 6519,
+        "max_tokens": 6585
+      },
+      {
+        "split": "val",
+        "rows": 148,
+        "kept": 148,
+        "dropped": 0,
+        "max_seq_length": 8192,
+        "min_tokens": 877,
+        "p50_tokens": 1097,
+        "p90_tokens": 1286,
+        "p95_tokens": 1329,
+        "p99_tokens": 1452,
+        "max_tokens": 1462
+      }
+    ],
+    "dropped_total": 0,
+    "report_files": {
+      "token_stats": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/token_stats.csv",
+      "token_stats_summary": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/token_stats_summary.csv",
+      "dropped": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped.csv",
+      "dropped_by_length": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped_by_length.csv",
+      "dropped_by_class": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped_by_class.csv",
+      "longest_examples": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/longest_examples.csv"
+    }
+  },
+  "joint_count": 41
+}

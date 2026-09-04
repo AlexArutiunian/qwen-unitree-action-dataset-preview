@@ -1,35 +1,48 @@
-# Qwen Robot Action Dataset Preview
+# Qwen training for Unitree motion JSON
 
-![Unitree G1 action preview](assets/robot-action-preview.webp)
+This branch preserves the code used to fine-tune and evaluate a local Qwen model for Russian natural-language command to Unitree G1 motion JSON generation.
 
-Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT dataset.
+The static dataset preview inherited from `main` is intentionally kept unchanged. Training code lives under [`training/qwen-json`](training/qwen-json).
 
-The full dataset is intended for LoRA/QLoRA fine-tuning of Qwen-family models on structured robot motion JSON generation.
+## Reproduced paper run
 
-## Preview
+The run matching the DCNA 2026 paper is configured by:
 
-Open the GitHub Pages site to inspect dataset samples in table form.
+```text
+training/qwen-json/configs/train_compact_8192.yaml
+```
 
-## Dataset summary
+Its preserved manifest reports:
 
-- Total samples: 1626
-- Train: 1401
-- Validation: 148
-- Reserved: 77
+- base model: `Qwen/Qwen2.5-Coder-7B-Instruct`;
+- QLoRA rank/alpha: `4/16`;
+- target modules: `q_proj`, `v_proj`;
+- dataset splits: 1,401 train, 148 validation, 77 reserved;
+- best checkpoint: step 150;
+- best validation loss: `0.32654744386672974`.
 
-We use the new format for JSON:
+## Layout
 
-<img width="660" height="585" alt="image" src="https://github.com/user-attachments/assets/a46fe294-f153-4a69-9f52-1655a4fd82a5" />
+```text
+training/qwen-json/
+├── src/          # dataset preparation, training, inference and evaluation
+├── configs/      # reproducible QLoRA run configurations
+├── scripts/      # train/eval helpers and dataset builders
+├── artifacts/    # small manifests and training histories; no weights
+├── benchmarks/   # lightweight benchmark outputs
+└── notebooks/    # compact launcher notebook preserved from the server
+```
 
+## Run
 
-## Main task
+```bash
+cd training/qwen-json
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.train --config configs/train_compact_8192.yaml
+```
 
-Russian natural-language robot command → Unitree G1 motion JSON plan.
+The dataset is downloaded from `AlexArutiunian/qwen-robot-action-dataset`. Set `HF_TOKEN` only in the environment when access requires it. No token or model weight is committed.
 
-## Files
-
-- `index.html` — static dataset preview.
-- `robot_sft_preview.csv` — CSV preview table.
-
-The full training files should be hosted separately on Hugging Face.
-https://huggingface.co/datasets/AlexArutiunian/g1-json-to-action/
+See [`REMOTE_ARTIFACTS.md`](training/qwen-json/REMOTE_ARTIFACTS.md) for the original server paths.

@@ -1,0 +1,48 @@
+project_root: .
+run_name: statis100_compact_slow_qwen3_8b_lora
+output_dir: outputs/statis100_compact_slow_qwen3_8b_lora
+model_name: Qwen/Qwen3-8B
+prompt_mode: compact
+max_seq_length: 4096
+max_new_tokens: 512
+seed: 42
+cuda_visible_devices: "0"
+bnb_4bit_compute_dtype: float16
+
+dataset:
+  local_sft_dir: outputs/dataset_100_statis_compact_slow_sft
+  work_dir: outputs/dataset_100_statis_compact_slow_sft
+  drop_overlength_examples: false
+
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.03
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  max_steps: 300
+  num_train_epochs: 50
+  batch_size: 1
+  eval_batch_size: 1
+  grad_accum: 8
+  learning_rate: 0.00008
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.05
+  logging_steps: 1
+  eval_steps: 10
+  save_steps: 10
+  save_total_limit: 5
+  early_stopping_patience: 8
+  early_stopping_threshold: 0.0005
+  optim: paged_adamw_8bit
+  report_to: ["tensorboard"]
+  dataloader_num_workers: 0
+  plot_after_train: true

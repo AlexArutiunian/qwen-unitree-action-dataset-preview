@@ -1,0 +1,168 @@
+{
+  "created_at": "2026-05-10T09:53:39+00:00",
+  "config": {
+    "project_root": ".",
+    "run_name": "compact_8192",
+    "output_dir": "outputs/compact_8192",
+    "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "prompt_mode": "compact",
+    "max_seq_length": 8192,
+    "max_new_tokens": 768,
+    "seed": 42,
+    "cuda_visible_devices": "0",
+    "bnb_4bit_compute_dtype": "float16",
+    "dataset": {
+      "repo_id": "AlexArutiunian/qwen-robot-action-dataset",
+      "repo_type": "dataset",
+      "revision": "main",
+      "files": [
+        "robot_sft.parquet",
+        "robot_spec_joints-only.txt"
+      ],
+      "parquet_file": "robot_sft.parquet",
+      "spec_file": "robot_spec_joints-only.txt",
+      "hf_cache_dir": "outputs/hf_downloaded_dataset",
+      "work_dir": "outputs/dataset_compact_8192",
+      "val_ratio": 0.1,
+      "reserved_source_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    "lora": {
+      "r": 4,
+      "alpha": 16,
+      "dropout": 0.05,
+      "target_modules": [
+        "q_proj",
+        "v_proj"
+      ]
+    },
+    "training": {
+      "max_steps": 600,
+      "num_train_epochs": 10,
+      "batch_size": 1,
+      "eval_batch_size": 1,
+      "grad_accum": 16,
+      "learning_rate": 0.0002,
+      "lr_scheduler_type": "cosine",
+      "warmup_ratio": 0.03,
+      "logging_steps": 1,
+      "eval_steps": 50,
+      "save_steps": 50,
+      "save_total_limit": 3,
+      "early_stopping_patience": 4,
+      "early_stopping_threshold": 0.001,
+      "optim": "paged_adamw_8bit",
+      "report_to": [
+        "tensorboard"
+      ],
+      "dataloader_num_workers": 0
+    },
+    "_config_path": "/home/arutiunyan_ag/alut/qwen_lora/configs/train_compact_8192.yaml"
+  },
+  "run_dir": "/home/arutiunyan_ag/alut/qwen_lora/outputs/compact_8192",
+  "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "prompt_mode": "compact",
+  "max_seq_length": 8192,
+  "train_rows": 1401,
+  "val_rows": 148,
+  "dataset_manifest": {
+    "created_at": "2026-05-10T09:10:00+00:00",
+    "repo_id": "AlexArutiunian/qwen-robot-action-dataset",
+    "repo_type": "dataset",
+    "parquet_input": "/home/arutiunyan_ag/alut/qwen_lora/outputs/hf_downloaded_dataset/robot_sft.parquet",
+    "spec_input": "/home/arutiunyan_ag/alut/qwen_lora/outputs/hf_downloaded_dataset/robot_spec_joints-only.txt",
+    "normalized_parquet": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/robot_sft.parquet",
+    "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "prompt_mode": "compact",
+    "max_seq_length": 8192,
+    "used_existing_split": true,
+    "rows": {
+      "train": 1401,
+      "val": 148,
+      "reserved": 77
+    },
+    "filtered_rows": {
+      "train": 1401,
+      "val": 148,
+      "reserved": 77
+    },
+    "token_stats": {
+      "n": 1626,
+      "min": 856,
+      "p50": 1139,
+      "p90": 1956,
+      "p95": 3194,
+      "p99": 6514,
+      "max": 6585,
+      "mean": 1433.6906519065192
+    },
+    "dropped_rows": 0,
+    "report_summary": {
+      "max_seq_length": 8192,
+      "splits": [
+        {
+          "split": "reserved",
+          "rows": 77,
+          "kept": 77,
+          "dropped": 0,
+          "max_seq_length": 8192,
+          "min_tokens": 902,
+          "p50_tokens": 930,
+          "p90_tokens": 986,
+          "p95_tokens": 992,
+          "p99_tokens": 998,
+          "max_tokens": 1000
+        },
+        {
+          "split": "train",
+          "rows": 1401,
+          "kept": 1401,
+          "dropped": 0,
+          "max_seq_length": 8192,
+          "min_tokens": 856,
+          "p50_tokens": 1182,
+          "p90_tokens": 2169,
+          "p95_tokens": 3336,
+          "p99_tokens": 6519,
+          "max_tokens": 6585
+        },
+        {
+          "split": "val",
+          "rows": 148,
+          "kept": 148,
+          "dropped": 0,
+          "max_seq_length": 8192,
+          "min_tokens": 877,
+          "p50_tokens": 1097,
+          "p90_tokens": 1286,
+          "p95_tokens": 1329,
+          "p99_tokens": 1452,
+          "max_tokens": 1462
+        }
+      ],
+      "dropped_total": 0,
+      "report_files": {
+        "token_stats": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/token_stats.csv",
+        "token_stats_summary": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/token_stats_summary.csv",
+        "dropped": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped.csv",
+        "dropped_by_length": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped_by_length.csv",
+        "dropped_by_class": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/dropped_by_class.csv",
+        "longest_examples": "/home/arutiunyan_ag/alut/qwen_lora/outputs/dataset_compact_8192/longest_examples.csv"
+      }
+    },
+    "joint_count": 41
+  },
+  "best_model_checkpoint": "/home/arutiunyan_ag/alut/qwen_lora/outputs/compact_8192/checkpoints/checkpoint-150",
+  "best_metric": 0.32654744386672974
+}
