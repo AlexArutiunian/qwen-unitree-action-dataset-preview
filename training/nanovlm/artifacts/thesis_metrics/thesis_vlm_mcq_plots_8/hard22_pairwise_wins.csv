@@ -1,0 +1,8 @@
+,our nanoVLM robot+reflect,Qwen2.5-VL-3B,Qwen3-VL-8B,nano AI2THOR,nano raw,Qwen2.5-VL-7B,nano robot-affordance
+our nanoVLM robot+reflect,0,5,4,7,7,6,8
+Qwen2.5-VL-3B,3,0,5,8,8,6,6
+Qwen3-VL-8B,1,4,0,7,7,4,6
+nano AI2THOR,4,7,7,0,0,7,11
+nano raw,4,7,7,0,0,7,11
+Qwen2.5-VL-7B,0,2,1,4,4,0,5
+nano robot-affordance,1,1,2,7,7,4,0

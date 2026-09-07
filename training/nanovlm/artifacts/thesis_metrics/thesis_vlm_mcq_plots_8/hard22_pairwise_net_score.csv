@@ -1,0 +1,8 @@
+model,net_pairwise_margin
+our nanoVLM robot+reflect,24
+Qwen2.5-VL-3B,10
+Qwen3-VL-8B,3
+nano AI2THOR,3
+nano raw,3
+Qwen2.5-VL-7B,-18
+nano robot-affordance,-25

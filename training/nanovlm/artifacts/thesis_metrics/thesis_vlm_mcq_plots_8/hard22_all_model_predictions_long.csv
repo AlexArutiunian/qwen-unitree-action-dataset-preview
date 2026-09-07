@@ -1,0 +1,148 @@
+image,model_label,correct,pred_answer,gt_answer
+images/sample_00000.jpg,Qwen2.5-VL-3B,1,Yes,Yes
+images/sample_00001.jpg,Qwen2.5-VL-3B,0,Yes,No
+images/sample_00002.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00003.jpg,Qwen2.5-VL-3B,0,No,Yes
+images/sample_00004.jpg,Qwen2.5-VL-3B,0,No,Yes
+images/sample_00005.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00006.jpg,Qwen2.5-VL-3B,0,Yes,No
+images/sample_00007.jpg,Qwen2.5-VL-3B,0,Yes,No
+images/sample_00008.jpg,Qwen2.5-VL-3B,1,Yes,Yes
+images/sample_00009.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00010.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00011.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00012.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00013.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00014.jpg,Qwen2.5-VL-3B,1,Yes,Yes
+images/sample_00015.jpg,Qwen2.5-VL-3B,1,Yes,Yes
+images/sample_00016.jpg,Qwen2.5-VL-3B,0,No,Yes
+images/sample_00017.jpg,Qwen2.5-VL-3B,0,No,Yes
+images/sample_00019.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00020.jpg,Qwen2.5-VL-3B,1,No,No
+images/sample_00021.jpg,Qwen2.5-VL-3B,0,Yes,No
+images/sample_00000.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00001.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00002.jpg,Qwen2.5-VL-7B,0,Yes,No
+images/sample_00003.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00004.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00005.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00006.jpg,Qwen2.5-VL-7B,0,Yes,No
+images/sample_00007.jpg,Qwen2.5-VL-7B,0,Yes,No
+images/sample_00008.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00009.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00010.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00011.jpg,Qwen2.5-VL-7B,0,Yes,No
+images/sample_00012.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00013.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00014.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00015.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00016.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00017.jpg,Qwen2.5-VL-7B,0,No,Yes
+images/sample_00019.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00020.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00021.jpg,Qwen2.5-VL-7B,1,No,No
+images/sample_00000.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00001.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00002.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00003.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00004.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00005.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00006.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00007.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00008.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00009.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00010.jpg,Qwen3-VL-8B,0,Yes,No
+images/sample_00011.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00012.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00013.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00014.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00015.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00016.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00017.jpg,Qwen3-VL-8B,0,No,Yes
+images/sample_00019.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00020.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00021.jpg,Qwen3-VL-8B,1,No,No
+images/sample_00000.jpg,nano raw,1,Yes,Yes
+images/sample_00001.jpg,nano raw,1,No,No
+images/sample_00002.jpg,nano raw,0,Yes,No
+images/sample_00003.jpg,nano raw,1,Yes,Yes
+images/sample_00004.jpg,nano raw,1,Yes,Yes
+images/sample_00005.jpg,nano raw,0,Yes,No
+images/sample_00006.jpg,nano raw,1,No,No
+images/sample_00007.jpg,nano raw,0,Yes,No
+images/sample_00008.jpg,nano raw,1,Yes,Yes
+images/sample_00009.jpg,nano raw,0,Yes,No
+images/sample_00010.jpg,nano raw,1,No,No
+images/sample_00011.jpg,nano raw,0,Yes,No
+images/sample_00012.jpg,nano raw,0,Yes,No
+images/sample_00013.jpg,nano raw,1,No,No
+images/sample_00014.jpg,nano raw,0,No,Yes
+images/sample_00015.jpg,nano raw,0,No,Yes
+images/sample_00016.jpg,nano raw,1,Yes,Yes
+images/sample_00017.jpg,nano raw,1,Yes,Yes
+images/sample_00019.jpg,nano raw,1,No,No
+images/sample_00020.jpg,nano raw,0,Yes,No
+images/sample_00021.jpg,nano raw,1,No,No
+images/sample_00000.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00001.jpg,nano AI2THOR,1,No,No
+images/sample_00002.jpg,nano AI2THOR,0,Yes,No
+images/sample_00003.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00004.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00005.jpg,nano AI2THOR,0,Yes,No
+images/sample_00006.jpg,nano AI2THOR,1,No,No
+images/sample_00007.jpg,nano AI2THOR,0,Yes,No
+images/sample_00008.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00009.jpg,nano AI2THOR,0,Yes,No
+images/sample_00010.jpg,nano AI2THOR,1,No,No
+images/sample_00011.jpg,nano AI2THOR,0,Yes,No
+images/sample_00012.jpg,nano AI2THOR,0,Yes,No
+images/sample_00013.jpg,nano AI2THOR,1,No,No
+images/sample_00014.jpg,nano AI2THOR,0,No,Yes
+images/sample_00015.jpg,nano AI2THOR,0,No,Yes
+images/sample_00016.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00017.jpg,nano AI2THOR,1,Yes,Yes
+images/sample_00019.jpg,nano AI2THOR,1,No,No
+images/sample_00020.jpg,nano AI2THOR,0,Yes,No
+images/sample_00021.jpg,nano AI2THOR,1,No,No
+images/sample_00000.jpg,nano robot-affordance,0,No,Yes
+images/sample_00001.jpg,nano robot-affordance,0,Yes,No
+images/sample_00002.jpg,nano robot-affordance,0,Yes,No
+images/sample_00003.jpg,nano robot-affordance,0,No,Yes
+images/sample_00004.jpg,nano robot-affordance,0,No,Yes
+images/sample_00005.jpg,nano robot-affordance,1,No,No
+images/sample_00006.jpg,nano robot-affordance,0,Yes,No
+images/sample_00007.jpg,nano robot-affordance,1,No,No
+images/sample_00008.jpg,nano robot-affordance,1,Yes,Yes
+images/sample_00009.jpg,nano robot-affordance,1,No,No
+images/sample_00010.jpg,nano robot-affordance,0,Yes,No
+images/sample_00011.jpg,nano robot-affordance,1,No,No
+images/sample_00012.jpg,nano robot-affordance,1,No,No
+images/sample_00013.jpg,nano robot-affordance,0,Yes,No
+images/sample_00014.jpg,nano robot-affordance,1,Yes,Yes
+images/sample_00015.jpg,nano robot-affordance,0,No,Yes
+images/sample_00016.jpg,nano robot-affordance,0,No,Yes
+images/sample_00017.jpg,nano robot-affordance,0,No,Yes
+images/sample_00019.jpg,nano robot-affordance,0,Yes,No
+images/sample_00020.jpg,nano robot-affordance,1,No,No
+images/sample_00021.jpg,nano robot-affordance,0,Yes,No
+images/sample_00000.jpg,our nanoVLM robot+reflect,0,No,Yes
+images/sample_00001.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00002.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00003.jpg,our nanoVLM robot+reflect,0,No,Yes
+images/sample_00004.jpg,our nanoVLM robot+reflect,1,Yes,Yes
+images/sample_00005.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00006.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00007.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00008.jpg,our nanoVLM robot+reflect,1,Yes,Yes
+images/sample_00009.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00010.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00011.jpg,our nanoVLM robot+reflect,0,Yes,No
+images/sample_00012.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00013.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00014.jpg,our nanoVLM robot+reflect,1,Yes,Yes
+images/sample_00015.jpg,our nanoVLM robot+reflect,0,No,Yes
+images/sample_00016.jpg,our nanoVLM robot+reflect,0,No,Yes
+images/sample_00017.jpg,our nanoVLM robot+reflect,0,No,Yes
+images/sample_00019.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00020.jpg,our nanoVLM robot+reflect,1,No,No
+images/sample_00021.jpg,our nanoVLM robot+reflect,1,No,No

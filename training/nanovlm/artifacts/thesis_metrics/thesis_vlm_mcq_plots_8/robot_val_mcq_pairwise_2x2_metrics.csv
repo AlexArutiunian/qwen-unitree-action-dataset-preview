@@ -1,0 +1,2 @@
+threshold,TP,FN,FP,TN,accuracy,precision,recall,f1,positive_pairs,negative_pairs,total_pairs
+0.5,591,270,234,2349,0.8536585365853658,0.7163636363636363,0.686411149825784,0.7010676156583631,861,2583,3444

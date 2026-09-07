@@ -11,6 +11,8 @@ training/nanovlm/
 ├── train/            # three recovered MCQ fine-tuning entrypoints
 ├── evaluation/       # inference, comparison and paper-plot code
 ├── dataset_tools/    # RobotVQA/robot MCQ preparation utilities
+├── notebooks/        # sanitized Kaggle experiment notebooks
+├── artifacts/        # compact experiment metrics and plots
 ├── upstream/nanoVLM # model architecture and upstream training code
 └── archive/          # remaining server experiment scripts, kept for provenance
 ```
@@ -30,12 +32,18 @@ python train/train_nanovlm_image_mcq.py \
   --work-dir runs/robot-mcq
 ```
 
-## Freeze-policy provenance note
+## Paper result provenance
 
-The recovered `train_nanovlm_image_mcq.py` first freezes every parameter, then enables the MCQ head, modality projector and the requested final decoder layers. The vision encoder stays frozen. `train_nanovlm_image_mcq_fuller.py` additionally allows final vision layers to be enabled, but defaults to zero such layers.
+The Google Drive archive added on 2026-09-07 contains the missing original paper experiment. [`experiment4-5-change-architect.ipynb`](training/nanovlm/notebooks/experiment4-5-change-architect.ipynb) and its extracted training entrypoint [`paper_single_gpu_aokvqa_mcq.py`](training/nanovlm/train/paper_single_gpu_aokvqa_mcq.py) establish the reported single-GPU configuration:
 
-This does **not** exactly match the revised paper wording that both the vision encoder and modality projector were frozen. No separate server script implementing that exact combination was found during the 2026-09-04 inventory. The recovered code is kept unchanged so the repository records what actually existed on the server.
+- vision encoder frozen;
+- modality projector frozen;
+- four-way MLP MCQ head trained;
+- final four decoder layers unfrozen;
+- A-OKVQA validation: `857/1,145 = 74.85%`.
 
-The reported `74.85% (857/1,145)` artifact was also not found verbatim. The closest paper-plot source currently points to an 861-example evaluation (`613/861`, 71.20%). This discrepancy should be resolved before claiming full reproduction.
+This is distinct from the later RobotVQA server scripts, which train the projector and report `613/861` on another validation set. See [`PAPER_RUN.md`](training/nanovlm/PAPER_RUN.md) for the exact command and interpretation.
+
+Notebook outputs and execution counters were removed before commit. The originals contained large embedded logs/images and plaintext Kaggle credentials; source cells now read `KAGGLE_USERNAME` and `KAGGLE_KEY` from the environment.
 
 See [`REMOTE_ARTIFACTS.md`](training/nanovlm/REMOTE_ARTIFACTS.md) for paths to the uncommitted checkpoints.
