@@ -88,10 +88,25 @@ function renderActionInfo() {
   $('referenceLink').hidden = currentAction.sample_id !== 91;
   rebuildJointTable();
 }
+function syncPlaybackUi() {
+  const label = playing ? 'Пауза' : 'Воспроизвести';
+  $('play').textContent = label;
+  $('stagePlay').classList.toggle('is-playing', playing);
+  $('stagePlay').setAttribute('aria-label', label);
+  $('stagePlay').setAttribute('title', label);
+  $('stagePlay').setAttribute('aria-pressed', String(playing));
+}
+function setControls(enabled) {
+  $('play').disabled = !enabled;
+  $('stagePlay').disabled = !enabled;
+  $('reset').disabled = !enabled;
+  $('seek').disabled = !enabled;
+}
 function fail(message) {
   ready = false; modelReady = false; playing = false; clearTimeout(timer); worker?.terminate();
+  syncPlaybackUi(); setControls(false);
   $('fallback').hidden = false; $('loading').textContent = message; $('retry').hidden = false; $('retry').onclick = start;
-  $('status').textContent = '3D недоступен'; $('play').disabled = true; $('reset').disabled = true; $('seek').disabled = true;
+  $('status').textContent = '3D недоступен';
 }
 function clock() { $('clock').textContent = `${time.toFixed(2)} / ${duration.toFixed(2)} с`; $('seek').value = time; }
 function requestPose(value) {
@@ -114,14 +129,22 @@ function fit(view) {
   controls.target.copy(center); controls.minDistance = radius * .5; controls.maxDistance = distance * 5; controls.update();
   dirty = true;
 }
-function toggle() { if (!ready) return; if (time >= duration) requestPose(0); playing = !playing; $('play').textContent = playing ? 'Пауза' : 'Воспроизвести'; }
-function reset() { playing = false; $('play').textContent = 'Воспроизвести'; requestPose(0); }
-function setControls(enabled) { $('play').disabled = !enabled; $('reset').disabled = !enabled; $('seek').disabled = !enabled; }
+function toggle() {
+  if (!ready || duration <= 0) return;
+  if (time >= duration) requestPose(0);
+  playing = !playing;
+  syncPlaybackUi();
+}
+function reset() {
+  playing = false;
+  syncPlaybackUi();
+  requestPose(0);
+}
 
 function selectAction(action, updateUrl = true) {
   if (!action || action.sample_id === currentAction.sample_id && action.program === currentAction.program) return;
   currentAction = action; motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; initialValues = null; unsupported = new Set();
-  playing = false; $('play').textContent = 'Воспроизвести'; setControls(false); renderActionInfo(); clock();
+  playing = false; syncPlaybackUi(); setControls(false); renderActionInfo(); clock();
   $('check').textContent = 'Подготовка motion…'; $('status').textContent = `Action #${currentAction.sample_id}`;
   if (updateUrl) {
     const url = new URL(location.href); url.searchParams.set('action', currentAction.sample_id); history.replaceState(null, '', url);
@@ -185,8 +208,10 @@ async function loadDataset() {
   }
 }
 
-$('play').onclick = toggle; $('reset').onclick = reset;
-$('seek').oninput = event => { playing = false; $('play').textContent = 'Воспроизвести'; requestPose(Number(event.target.value)); };
+$('play').onclick = toggle;
+$('stagePlay').onclick = toggle;
+$('reset').onclick = reset;
+$('seek').oninput = event => { playing = false; syncPlaybackUi(); requestPose(Number(event.target.value)); };
 $('actionSearch').oninput = populateActions; $('splitFilter').onchange = populateActions;
 $('actionSelect').onchange = event => selectAction(actions.find(action => action.sample_id === Number(event.target.value)));
 $('prevAction').onclick = () => {
@@ -200,11 +225,13 @@ document.addEventListener('keydown', event => {
   if (/INPUT|SELECT|TEXTAREA|BUTTON|SUMMARY/.test(event.target.tagName) || event.target.isContentEditable) return;
   if (event.code === 'Space') { event.preventDefault(); toggle(); }
   if (event.code === 'KeyR') reset();
-  if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') { event.preventDefault(); playing = false; requestPose(time + (event.code === 'ArrowLeft' ? -.1 : .1)); $('play').textContent = 'Воспроизвести'; }
+  if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
+    event.preventDefault(); playing = false; syncPlaybackUi(); requestPose(time + (event.code === 'ArrowLeft' ? -.1 : .1));
+  }
 });
 
 function start() {
-  worker?.terminate(); clearTimeout(timer); ready = false; modelReady = false; busy = false; initialValues = null; playing = false; time = 0; wanted = 0; setControls(false); clock();
+  worker?.terminate(); clearTimeout(timer); ready = false; modelReady = false; busy = false; initialValues = null; playing = false; time = 0; wanted = 0; syncPlaybackUi(); setControls(false); clock();
   $('retry').hidden = true; $('fallback').hidden = false; $('loading').textContent = 'Загрузка интерактивной модели…';
   for (const mesh of meshes) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); } meshes = [];
   worker = new Worker(new URL('./engine.worker.js', import.meta.url), { type: 'module' });
@@ -228,8 +255,8 @@ function start() {
       duration = data.duration; $('seek').max = Math.max(duration, .001); time = 0; wanted = 0; busy = false; initialValues = null; unsupported = new Set(data.unsupported || []);
       bounds = new THREE.Box3(new THREE.Vector3(...data.bounds.min), new THREE.Vector3(...data.bounds.max)); fit('front');
       for (const [name, cell] of cells) cell.row.classList.toggle('unsupported', unsupported.has(name));
-      ready = true; setControls(true); clock();
-      $('stageMeta').textContent = `${currentAction.split} · ${currentAction.class} · ${currentAction.augmentation_type || 'original'} · ${duration.toFixed(2)} с`;
+      ready = true; setControls(true); playing = duration > 0; syncPlaybackUi(); clock();
+      $('stageMeta').textContent = `${currentAction.split} · ${currentAction.class} · ${currentAction.augmentation_type || 'original'} · ${duration.toFixed(2)} с · loop`;
       $('status').textContent = software ? `#${currentAction.sample_id} · Программный 3D` : `#${currentAction.sample_id} · WebGL`;
       if (unsupported.size) $('check').textContent = `${unsupported.size} сустав(а) Inspire Hand не визуализируются этой web-моделью G1`;
     }
@@ -261,7 +288,7 @@ function start() {
   worker.postMessage({ type: 'init', base: new URL('./', document.baseURI).href, format: new URLSearchParams(location.search).get('format'), lite: software, program: currentAction.program, version: motionVersion });
 }
 
-renderActionInfo(); populateActions();
+renderActionInfo(); populateActions(); syncPlaybackUi();
 try {
   scene = new THREE.Scene(); scene.fog = new THREE.Fog('#121a24', 9, 22);
   camera = new THREE.PerspectiveCamera(36, 1, .01, 100); camera.up.set(0, 0, 1);
@@ -283,7 +310,10 @@ try {
   let last = performance.now();
   function animate(now) {
     const elapsed = Math.max(0, (now - last) / 1000); last = now;
-    if (playing && ready) { requestPose(time + elapsed * Number($('speed').value)); if (time >= duration) { playing = false; $('play').textContent = 'Воспроизвести'; } }
+    if (playing && ready && duration > 0) {
+      const next = time + elapsed * Number($('speed').value);
+      requestPose(next >= duration ? next % duration : next);
+    }
     controls.update(); if (dirty) { renderer.render(scene, camera); dirty = false; } animationId = requestAnimationFrame(animate);
   }
   animationId = requestAnimationFrame(animate);
