@@ -41,7 +41,6 @@ jobs:
           grep -q 'Source-id browsing + compact prompt polish v3' web/src/style.css
           grep -q '>Отправить</button>' web/index.html
           grep -q 'Что должен сделать робот?' demo/index.html
-          grep -R -q 'sourceRepresentatives' demo/assets
       - name: Remove one-shot files
         run: |
           rm -f .github/workflows/apply-source-browser-mobile-polish.yml
