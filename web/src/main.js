@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { sample91 } from './sample.js';
 import './style.css';
 
@@ -18,7 +20,7 @@ const labels = {
 
 let actions = [fallbackAction], currentAction = fallbackAction, targets = [], cells = new Map(), unsupported = new Set();
 let worker, timer, playing = false, playbackDirection = 1, time = 0, duration = 1.5, ready = false, modelReady = false, busy = false, wanted = 0, motionVersion = 1;
-let renderer, scene, camera, controls, meshes = [], bounds, initialValues, software = false, animationId, dirty = true;
+let renderer, scene, camera, controls, meshes = [], bounds, initialValues, environmentTexture, software = false, animationId, dirty = true;
 const matrix = new THREE.Matrix4(), center = new THREE.Vector3(), direction = new THREE.Vector3(3, -2, 0.9);
 
 function padId(id) { return String(id).padStart(5, '0'); }
@@ -266,22 +268,34 @@ function start() {
     if (data.type === 'ready') {
       clearTimeout(timer); modelReady = true;
       meshes = data.geometries.map(g => {
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3));
-        if (g.normals && g.normals.length === g.vertices.length) {
-          geometry.setAttribute('normal', new THREE.Float32BufferAttribute(g.normals, 3));
-        } else {
+        const indexed = new THREE.BufferGeometry();
+        indexed.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3));
+        indexed.setIndex(new THREE.BufferAttribute(g.faces, 1));
+
+        // The official G1 geometry stays bit-for-bit at the same vertex
+        // positions. Only shading normals are generated. Adjacent triangles
+        // are visually blended below 50 degrees, while real mechanical edges
+        // remain sharp. This removes the faceted/triangular look without
+        // rounding or simplifying the robot body.
+        let geometry = indexed;
+        if (software) {
           geometry.computeVertexNormals();
+        } else {
+          geometry = toCreasedNormals(indexed, THREE.MathUtils.degToRad(50));
+          if (geometry !== indexed) indexed.dispose();
         }
         geometry.computeBoundingSphere();
 
         const color = new THREE.Color(g.rgba[0], g.rgba[1], g.rgba[2]);
         const material = software
           ? new THREE.MeshLambertMaterial({ color })
-          : new THREE.MeshStandardMaterial({
+          : new THREE.MeshPhysicalMaterial({
               color,
-              roughness: .34,
-              metalness: .16,
+              roughness: .42,
+              metalness: .08,
+              clearcoat: .16,
+              clearcoatRoughness: .48,
+              envMapIntensity: .9,
               flatShading: false,
               transparent: g.rgba[3] < .999,
               opacity: g.rgba[3]
@@ -294,7 +308,7 @@ function start() {
         return mesh;
       });
       const triangles = Number(data.triangles || 0).toLocaleString('ru-RU');
-      $('metrics').textContent = `${data.format.toUpperCase()} · HQ official mesh · ${triangles} граней · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
+      $('metrics').textContent = `${data.format.toUpperCase()} · exact official mesh · ${triangles} граней · smooth crease 50° · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
       if (data.version !== motionVersion) worker.postMessage({ type: 'loadMotion', program: currentAction.program, version: motionVersion });
     }
     if (data.type === 'motionReady') {
@@ -344,11 +358,17 @@ try {
   if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08; }
   else { software = true; renderer = new SVGRenderer(); renderer.setQuality('low'); renderer.setClearColor(0x17212e); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; }
   $('viewport').append(renderer.domElement);
+  if (!software) {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    environmentTexture = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+    scene.environment = environmentTexture;
+    pmrem.dispose();
+  }
   renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); fail('WebGL-контекст потерян. Обновите страницу.'); });
   controls = new OrbitControls(camera, renderer.domElement); controls.addEventListener('change', () => { dirty = true; }); controls.enableDamping = true; controls.dampingFactor = .08;
-  scene.add(new THREE.HemisphereLight(0xcbdcff, 0x36465e, software ? .65 : 2));
-  const light = new THREE.DirectionalLight(0xffffff, software ? .8 : 3); light.position.set(3, -4, 6); light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; scene.add(light);
-  const rim = new THREE.DirectionalLight(0x7ecde8, software ? .3 : 2); rim.position.set(-3, 3, 4); scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xcbdcff, 0x36465e, software ? .65 : 1.05));
+  const light = new THREE.DirectionalLight(0xffffff, software ? .8 : 1.85); light.position.set(3, -4, 6); light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; scene.add(light);
+  const rim = new THREE.DirectionalLight(0x7ecde8, software ? .3 : .75); rim.position.set(-3, 3, 4); scene.add(rim);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x192331, roughness: .9 })); floor.position.z = -.007; floor.receiveShadow = true; if (!software) scene.add(floor);
   const grid = new THREE.GridHelper(12, 60, 0x43586d, 0x263647); grid.rotation.x = Math.PI / 2; grid.position.z = -.005; if (software) { grid.material.vertexColors = false; grid.material.color.set(0x314154); } scene.add(grid);
   new ResizeObserver(() => {
@@ -365,4 +385,4 @@ try {
   animationId = requestAnimationFrame(animate);
   $('retry').onclick = start; start(); loadDataset();
 } catch (error) { fail(`Интерактивный просмотр недоступен: ${error.message}`); loadDataset(); }
-window.addEventListener('pagehide', () => { worker?.terminate(); clearTimeout(timer); cancelAnimationFrame(animationId); });
+window.addEventListener('pagehide', () => { worker?.terminate(); clearTimeout(timer); cancelAnimationFrame(animationId); environmentTexture?.dispose(); });

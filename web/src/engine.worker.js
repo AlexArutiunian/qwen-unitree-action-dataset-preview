@@ -112,39 +112,20 @@ self.onmessage = async ({ data: message }) => {
       if (model.geom_type[id] !== 7) throw new Error(`Unsupported visual geom type ${model.geom_type[id]}`);
 
       const mesh = model.geom_dataid[id];
-      const va = model.mesh_vertadr[mesh], fa = model.mesh_faceadr[mesh], fn = model.mesh_facenum[mesh];
-      const na = model.mesh_normaladr[mesh], nn = model.mesh_normalnum[mesh];
-      const vertices = new Float32Array(fn * 9);
-      const normals = new Float32Array(fn * 9);
+      const va = model.mesh_vertadr[mesh], vn = model.mesh_vertnum[mesh];
+      const fa = model.mesh_faceadr[mesh], fn = model.mesh_facenum[mesh];
 
-      // Expand each triangle corner so MuJoCo's per-corner normal indices are
-      // preserved exactly. This keeps CAD-like sharp edges while smoothing the
-      // curved parts according to the official mesh compiler.
-      for (let face = 0; face < fn; face++) {
-        for (let corner = 0; corner < 3; corner++) {
-          const faceSlot = (fa + face) * 3 + corner;
-          const vi = model.mesh_face[faceSlot];
-          const ni = model.mesh_facenormal[faceSlot];
-          const dst = (face * 3 + corner) * 3;
-          const srcV = (va + vi) * 3;
-          vertices[dst] = model.mesh_vert[srcV];
-          vertices[dst + 1] = model.mesh_vert[srcV + 1];
-          vertices[dst + 2] = model.mesh_vert[srcV + 2];
-
-          if (na >= 0 && nn > 0 && ni >= 0) {
-            const srcN = (na + ni) * 3;
-            normals[dst] = model.mesh_normal[srcN];
-            normals[dst + 1] = model.mesh_normal[srcN + 1];
-            normals[dst + 2] = model.mesh_normal[srcN + 2];
-          }
-        }
-      }
-
+      // Preserve the exact official compiled geometry as an indexed mesh.
+      // Shading normals are generated in the renderer with a crease angle;
+      // vertex positions and triangle topology are never changed.
+      const vertices = new Float32Array(model.mesh_vert.subarray(va * 3, (va + vn) * 3));
+      const faces = new Uint32Array(model.mesh_face.subarray(fa * 3, (fa + fn) * 3));
       const rgba = new Float32Array(model.geom_rgba.subarray(id * 4, id * 4 + 4));
+
       visible.push(id);
       triangleCount += fn;
-      geometries.push({ vertices, normals, rgba, triangleCount: fn });
-      transfers.push(vertices.buffer, normals.buffer, rgba.buffer);
+      geometries.push({ vertices, faces, rgba, triangleCount: fn });
+      transfers.push(vertices.buffer, faces.buffer, rgba.buffer);
     }
     for (const file of files) mj.FS.unlink(`/model/${file.replace(/\.gz$/, '')}`);
     initializing = false;
