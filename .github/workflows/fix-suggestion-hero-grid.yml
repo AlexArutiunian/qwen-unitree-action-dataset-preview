@@ -1,0 +1,60 @@
+name: Fix suggestion hero grid placement
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-suggestion-hero-grid.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Fix hero placement
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('web/src/style.css')
+          s=p.read_text()
+          needle='.suggestion-hero h2{font-size:24px;margin:7px 0 5px;letter-spacing:-.025em}\n'
+          insert=needle+'.suggestion-hero>.eyebrow{grid-column:1;grid-row:1;align-self:end}\n.suggestion-hero>h2{grid-column:1;grid-row:2}\n.suggestion-hero>.suggestion-help{grid-column:1;grid-row:3;align-self:start}\n.suggestion-hero>form{grid-column:2;grid-row:1/4}\n'
+          if needle not in s: raise SystemExit('desktop hero marker not found')
+          s=s.replace(needle,insert,1)
+          needle2='  .suggestion-hero{grid-template-columns:1fr;padding:16px 18px;gap:10px}\n'
+          insert2=needle2+'  .suggestion-hero>.eyebrow,.suggestion-hero>h2,.suggestion-hero>.suggestion-help,.suggestion-hero>form{grid-column:1;grid-row:auto}\n'
+          if needle2 not in s: raise SystemExit('responsive hero marker not found')
+          s=s.replace(needle2,insert2,1)
+          p.write_text(s)
+          PY
+      - name: Install
+        working-directory: web
+        run: npm ci
+      - name: Test
+        working-directory: web
+        run: npm test
+      - name: Release demo
+        working-directory: web
+        run: npm run release
+      - name: Verify
+        run: |
+          grep -q 'suggestion-hero>form{grid-column:2;grid-row:1/4}' web/src/style.css
+          grep -q 'stagePrevAction' demo/index.html
+      - name: Remove one-shot workflow
+        run: rm -f .github/workflows/fix-suggestion-hero-grid.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix action prompt hero layout'
+          git push origin HEAD:main
