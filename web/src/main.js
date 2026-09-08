@@ -17,7 +17,7 @@ const labels = {
 };
 
 let actions = [fallbackAction], currentAction = fallbackAction, targets = [], cells = new Map(), unsupported = new Set();
-let worker, timer, playing = false, time = 0, duration = 1.5, ready = false, modelReady = false, busy = false, wanted = 0, motionVersion = 1;
+let worker, timer, playing = false, playbackDirection = 1, time = 0, duration = 1.5, ready = false, modelReady = false, busy = false, wanted = 0, motionVersion = 1;
 let renderer, scene, camera, controls, meshes = [], bounds, initialValues, software = false, animationId, dirty = true;
 const matrix = new THREE.Matrix4(), center = new THREE.Vector3(), direction = new THREE.Vector3(3, -2, 0.9);
 
@@ -131,19 +131,35 @@ function fit(view) {
 }
 function toggle() {
   if (!ready || duration <= 0) return;
-  if (time >= duration) requestPose(0);
   playing = !playing;
   syncPlaybackUi();
 }
 function reset() {
   playing = false;
+  playbackDirection = 1;
   syncPlaybackUi();
   requestPose(0);
+}
+function pingPongTime(delta) {
+  if (!Number.isFinite(delta) || delta <= 0 || duration <= 0) return time;
+  const cycle = duration * 2;
+  let phase = playbackDirection > 0 ? time : cycle - time;
+  phase = (phase + delta) % cycle;
+  if (phase < duration) {
+    playbackDirection = 1;
+    return phase;
+  }
+  if (phase > duration) {
+    playbackDirection = -1;
+    return cycle - phase;
+  }
+  playbackDirection = -1;
+  return duration;
 }
 
 function selectAction(action, updateUrl = true) {
   if (!action || action.sample_id === currentAction.sample_id && action.program === currentAction.program) return;
-  currentAction = action; motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; initialValues = null; unsupported = new Set();
+  currentAction = action; motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; playbackDirection = 1; initialValues = null; unsupported = new Set();
   playing = false; syncPlaybackUi(); setControls(false); renderActionInfo(); clock();
   $('check').textContent = 'Подготовка motion…'; $('status').textContent = `Action #${currentAction.sample_id}`;
   if (updateUrl) {
@@ -211,7 +227,14 @@ async function loadDataset() {
 $('play').onclick = toggle;
 $('stagePlay').onclick = toggle;
 $('reset').onclick = reset;
-$('seek').oninput = event => { playing = false; syncPlaybackUi(); requestPose(Number(event.target.value)); };
+$('seek').oninput = event => {
+  playing = false;
+  const value = Number(event.target.value);
+  if (value <= 0) playbackDirection = 1;
+  else if (value >= duration) playbackDirection = -1;
+  syncPlaybackUi();
+  requestPose(value);
+};
 $('actionSearch').oninput = populateActions; $('splitFilter').onchange = populateActions;
 $('actionSelect').onchange = event => selectAction(actions.find(action => action.sample_id === Number(event.target.value)));
 $('prevAction').onclick = () => {
@@ -231,7 +254,7 @@ document.addEventListener('keydown', event => {
 });
 
 function start() {
-  worker?.terminate(); clearTimeout(timer); ready = false; modelReady = false; busy = false; initialValues = null; playing = false; time = 0; wanted = 0; syncPlaybackUi(); setControls(false); clock();
+  worker?.terminate(); clearTimeout(timer); ready = false; modelReady = false; busy = false; initialValues = null; playing = false; playbackDirection = 1; time = 0; wanted = 0; syncPlaybackUi(); setControls(false); clock();
   $('retry').hidden = true; $('fallback').hidden = false; $('loading').textContent = 'Загрузка интерактивной модели…';
   for (const mesh of meshes) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); } meshes = [];
   worker = new Worker(new URL('./engine.worker.js', import.meta.url), { type: 'module' });
@@ -252,11 +275,11 @@ function start() {
     }
     if (data.type === 'motionReady') {
       if (data.version !== motionVersion) return;
-      duration = data.duration; $('seek').max = Math.max(duration, .001); time = 0; wanted = 0; busy = false; initialValues = null; unsupported = new Set(data.unsupported || []);
+      duration = data.duration; $('seek').max = Math.max(duration, .001); time = 0; wanted = 0; playbackDirection = 1; busy = false; initialValues = null; unsupported = new Set(data.unsupported || []);
       bounds = new THREE.Box3(new THREE.Vector3(...data.bounds.min), new THREE.Vector3(...data.bounds.max)); fit('front');
       for (const [name, cell] of cells) cell.row.classList.toggle('unsupported', unsupported.has(name));
       ready = true; setControls(true); playing = duration > 0; syncPlaybackUi(); clock();
-      $('stageMeta').textContent = `${currentAction.split} · ${currentAction.class} · ${currentAction.augmentation_type || 'original'} · ${duration.toFixed(2)} с · loop`;
+      $('stageMeta').textContent = `${currentAction.split} · ${currentAction.class} · ${currentAction.augmentation_type || 'original'} · ${duration.toFixed(2)} с · ping-pong`;
       $('status').textContent = software ? `#${currentAction.sample_id} · Программный 3D` : `#${currentAction.sample_id} · WebGL`;
       if (unsupported.size) $('check').textContent = `${unsupported.size} сустав(а) Inspire Hand не визуализируются этой web-моделью G1`;
     }
@@ -311,8 +334,7 @@ try {
   function animate(now) {
     const elapsed = Math.max(0, (now - last) / 1000); last = now;
     if (playing && ready && duration > 0) {
-      const next = time + elapsed * Number($('speed').value);
-      requestPose(next >= duration ? next % duration : next);
+      requestPose(pingPongTime(elapsed * Number($('speed').value)));
     }
     controls.update(); if (dirty) { renderer.render(scene, camera); dirty = false; } animationId = requestAnimationFrame(animate);
   }
