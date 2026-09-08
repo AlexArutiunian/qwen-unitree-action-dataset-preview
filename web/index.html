@@ -2,17 +2,8 @@
 <html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Action browser · MuJoCo</title></head>
 <body><div id="app">
 <header><a href="../">G1 / MOTION LAB</a><span>MuJoCo 3.12.0 · 1626 actions</span><strong id="status" role="status">Подготовка…</strong></header>
-<main><section class="stage"><div class="stage-title"><span class="eyebrow" id="sampleLabel">SAMPLE 00091</span><h1 id="stageCommand">Выполни шире и выразительнее: левую руку вверх, правую руку вбок</h1><p id="stageMeta">train · basic_pose_control · intensity_large</p></div>
-<div id="viewport" aria-label="Интерактивная 3D-модель Unitree G1"></div>
-<button id="stagePlay" class="stage-play" type="button" disabled aria-label="Воспроизвести" aria-pressed="false" title="Воспроизвести">
-<svg viewBox="0 0 32 32" aria-hidden="true"><path class="icon-play" d="M11 7.5v17l14-8.5z"/><g class="icon-pause"><rect x="9" y="7" width="5" height="18" rx="1"/><rect x="18" y="7" width="5" height="18" rx="1"/></g></svg>
-</button>
-<div id="fallback"><img id="referenceImage" src="./sample-91-mujoco-comparison.png" alt="Desktop MuJoCo reference sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
-<div class="camera"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="back">Сзади</button><button data-view="fit">Вписать</button></div>
-<div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
-<div class="transport"><button id="play" disabled>Воспроизвести</button><button id="reset" disabled>Сброс</button><output id="clock">0.00 / 1.50 с</output><input id="seek" type="range" min="0" max="1.5" step="0.001" value="0" aria-label="Позиция движения" disabled><label>Скорость <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div></section>
-<aside>
-<section class="suggestion-box" aria-labelledby="suggestionHeading">
+<main>
+<section class="suggestion-box suggestion-hero" aria-labelledby="suggestionHeading">
 <span class="eyebrow">ПРЕДЛОЖИТЬ ACTION</span>
 <h2 id="suggestionHeading">Что должен сделать робот?</h2>
 <p class="suggestion-help">Опиши движение рук и пояса своими словами. Ноги в этой форме не двигаем.</p>
@@ -24,7 +15,21 @@
 <p id="suggestionStatus" class="suggestion-status" role="status"></p>
 </form>
 </section>
-<div class="divider"></div><span class="eyebrow">ACTION</span>
+<section class="stage"><div class="stage-title"><span class="eyebrow" id="sampleLabel">SAMPLE 00091</span><h1 id="stageCommand">Выполни шире и выразительнее: левую руку вверх, правую руку вбок</h1><p id="stageMeta">train · basic_pose_control · intensity_large</p></div>
+<div id="viewport" aria-label="Интерактивная 3D-модель Unitree G1"></div>
+<div class="stage-actions" aria-label="Навигация по actions">
+<button id="stagePrevAction" class="stage-nav-button" type="button" title="Предыдущий action" aria-label="Предыдущий action">‹</button>
+<button id="stagePlay" class="stage-play" type="button" disabled aria-label="Воспроизвести" aria-pressed="false" title="Воспроизвести">
+<svg viewBox="0 0 32 32" aria-hidden="true"><path class="icon-play" d="M11 7.5v17l14-8.5z"/><g class="icon-pause"><rect x="9" y="7" width="5" height="18" rx="1"/><rect x="18" y="7" width="5" height="18" rx="1"/></g></svg>
+</button>
+<button id="stageNextAction" class="stage-nav-button" type="button" title="Следующий action" aria-label="Следующий action">›</button>
+</div>
+<div id="fallback"><img id="referenceImage" src="./sample-91-mujoco-comparison.png" alt="Desktop MuJoCo reference sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
+<div class="camera"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="back">Сзади</button><button data-view="fit">Вписать</button></div>
+<div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
+<div class="transport"><button id="play" disabled>Воспроизвести</button><button id="reset" disabled>Сброс</button><output id="clock">0.00 / 1.50 с</output><input id="seek" type="range" min="0" max="1.5" step="0.001" value="0" aria-label="Позиция движения" disabled><label>Скорость <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div></section>
+<aside>
+<span class="eyebrow">ACTION</span>
 <div class="action-picker">
 <input id="actionSearch" type="search" placeholder="ID, команда, class…" aria-label="Поиск action" disabled>
 <div class="picker-row"><select id="splitFilter" aria-label="Фильтр split" disabled><option value="">Все split</option><option value="train">train</option><option value="validation">validation</option><option value="reserved">reserved</option></select><span id="datasetCount">1 / 1</span></div>

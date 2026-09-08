@@ -318,6 +318,8 @@ $('prevAction').onclick = () => {
 $('nextAction').onclick = () => {
   const index = actions.findIndex(action => action.sample_id === currentAction.sample_id); if (index >= 0 && index < actions.length - 1) { selectAction(actions[index + 1]); populateActions(); }
 };
+$('stagePrevAction').onclick = () => $('prevAction').click();
+$('stageNextAction').onclick = () => $('nextAction').click();
 for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => fit(button.dataset.view);
 document.addEventListener('keydown', event => {
   if (/INPUT|SELECT|TEXTAREA|BUTTON|SUMMARY/.test(event.target.tagName) || event.target.isContentEditable) return;
