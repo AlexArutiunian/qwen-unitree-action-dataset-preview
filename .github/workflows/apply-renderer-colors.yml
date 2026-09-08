@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-renderer-colors.yml'
+      - 'tools/patch_renderer_colors.py'
 
 permissions:
   contents: write
