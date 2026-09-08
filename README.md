@@ -6,6 +6,12 @@ Static HTML preview for the Unitree G1 Russian command → robot motion JSON SFT
 
 The full dataset is intended for LoRA/QLoRA fine-tuning of Qwen-family models on structured robot motion JSON generation.
 
+## Interactive sample 91
+
+[Open the real MuJoCo G1 demo](https://alexarutiunian.github.io/qwen-unitree-action-dataset-preview/demo/).
+
+One action, live 3D, orbit controls, playback and exact joint telemetry. The original table remains below. See [web/README.md](web/README.md) for architecture, model provenance and rebuild instructions.
+
 ## Preview
 
 Open the GitHub Pages site to inspect dataset samples in table form.

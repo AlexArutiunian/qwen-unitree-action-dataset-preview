@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Motion 91 · MuJoCo</title></head>
+<body><div id="app">
+<header><a href="../">G1 / MOTION LAB</a><span>MuJoCo 3.12.0 · Forward kinematics</span><strong id="status" role="status">Подготовка…</strong></header>
+<main><section class="stage"><div class="stage-title"><span class="eyebrow">SAMPLE 00091</span><h1>Левую руку вверх.<br>Правую руку вбок.</h1><p>Шире и выразительнее · 1,5 с</p></div>
+<div id="viewport" aria-label="Интерактивная 3D-модель Unitree G1"></div>
+<div id="fallback"><img src="./sample-91-mujoco-comparison.png" alt="Настоящий desktop MuJoCo референс sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
+<div class="camera"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="back">Сзади</button><button data-view="fit">Вписать</button></div>
+<div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
+<div class="transport"><button id="play" disabled>Воспроизвести</button><button id="reset" disabled>Сброс</button><output id="clock">0.00 / 1.50 с</output><input id="seek" type="range" min="0" max="1.5" step="0.001" value="0" aria-label="Позиция движения" disabled><label>Скорость <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div></section>
+<aside><span class="eyebrow">КОМАНДА</span><p id="command"></p><div class="divider"></div><span class="eyebrow">СУСТАВЫ · ГРАДУСЫ</span><table><thead><tr><th>Сустав</th><th>Сейчас</th><th>Цель</th></tr></thead><tbody id="joints"></tbody></table><p id="check" role="status">Ожидание модели</p><details><summary>Motion JSON</summary><pre id="json"></pre></details><details><summary>О модели и проверке</summary><p>Официальная Unitree G1, 29 суставов, упрощённые визуальные сетки. Пальцы Inspire из локального референса не включены.</p><p>Углы записываются в qpos; MuJoCo вычисляет положение геометрии через mj_forward. Физическое управление не используется.</p><p id="metrics"></p><a href="./sample-91-mujoco-comparison.png" target="_blank">Desktop-референс</a> · <a href="./model/LICENSE">Лицензия модели</a></details><p class="shortcuts">Пробел: старт / пауза<br>R: сброс · ← →: ±0,1 с</p></aside>
+</main></div><script type="module" src="/src/main.js"></script></body></html>
