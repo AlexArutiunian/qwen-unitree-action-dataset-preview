@@ -266,11 +266,35 @@ function start() {
     if (data.type === 'ready') {
       clearTimeout(timer); modelReady = true;
       meshes = data.geometries.map(g => {
-        const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3)); geometry.setIndex(g.faces); geometry.computeVertexNormals();
-        const material = software ? new THREE.MeshLambertMaterial({ color: new THREE.Color(...g.rgba.slice(0, 3)) }) : new THREE.MeshStandardMaterial({ color: new THREE.Color(...g.rgba.slice(0, 3)), roughness: .55, metalness: .22 });
-        const mesh = new THREE.Mesh(geometry, material); mesh.matrixAutoUpdate = false; mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); return mesh;
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3));
+        if (g.normals && g.normals.length === g.vertices.length) {
+          geometry.setAttribute('normal', new THREE.Float32BufferAttribute(g.normals, 3));
+        } else {
+          geometry.computeVertexNormals();
+        }
+        geometry.computeBoundingSphere();
+
+        const color = new THREE.Color(g.rgba[0], g.rgba[1], g.rgba[2]);
+        const material = software
+          ? new THREE.MeshLambertMaterial({ color })
+          : new THREE.MeshStandardMaterial({
+              color,
+              roughness: .34,
+              metalness: .16,
+              flatShading: false,
+              transparent: g.rgba[3] < .999,
+              opacity: g.rgba[3]
+            });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.matrixAutoUpdate = false;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+        return mesh;
       });
-      $('metrics').textContent = `${data.format.toUpperCase()} · ${data.compileMs.toFixed(0)} мс · ${meshes.length} визуальных сеток · nq=${data.nq}`;
+      const triangles = Number(data.triangles || 0).toLocaleString('ru-RU');
+      $('metrics').textContent = `${data.format.toUpperCase()} · HQ official mesh · ${triangles} граней · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
       if (data.version !== motionVersion) worker.postMessage({ type: 'loadMotion', program: currentAction.program, version: motionVersion });
     }
     if (data.type === 'motionReady') {
@@ -317,7 +341,7 @@ try {
   camera = new THREE.PerspectiveCamera(36, 1, .01, 100); camera.up.set(0, 0, 1);
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('webgl2', { antialias: true, alpha: true });
-  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; }
+  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08; }
   else { software = true; renderer = new SVGRenderer(); renderer.setQuality('low'); renderer.setClearColor(0x17212e); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; }
   $('viewport').append(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); fail('WebGL-контекст потерян. Обновите страницу.'); });
