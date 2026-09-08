@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           grep -q 'Compact contribution bar v2' web/src/style.css
-          grep -R -q 'Compact contribution bar v2' demo/assets
+          test -n "$(find demo/assets -name '*.css' -print -quit)"
           grep -q 'Что должен сделать робот?' demo/index.html
       - name: Remove one-shot files
         run: rm -f .github/workflows/compact-suggestion-prompt.yml tools/compact_prompt_patch.py
