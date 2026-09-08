@@ -117,14 +117,14 @@ function requestPose(value) {
 }
 function fit(view) {
   if (!bounds) return;
-  if (view === 'front') direction.set(1, 0, 0.08);
-  if (view === 'side') direction.set(0, -1, 0.08);
-  if (view === 'back') direction.set(-1, 0, 0.08);
+  if (view === 'front') direction.set(1, 0, 0.22);
+  if (view === 'side') direction.set(0, -1, 0.16);
+  if (view === 'back') direction.set(-1, 0, 0.22);
   if (view === 'fit') direction.copy(camera.position).sub(controls.target);
   const size = bounds.getSize(new THREE.Vector3()); bounds.getCenter(center);
   const radius = Math.max(0.25, size.length() / 2);
   const halfV = THREE.MathUtils.degToRad(camera.fov / 2), halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-  const framing = camera.aspect < 0.82 ? 1.10 : 1.03;
+  const framing = camera.aspect < 0.82 ? 1.03 : 1.00;
   const distance = radius / Math.sin(Math.min(halfV, halfH)) * framing;
   camera.position.copy(center).addScaledVector(direction.normalize(), distance);
   camera.near = .01; camera.far = Math.max(100, distance * 10); camera.updateProjectionMatrix();
