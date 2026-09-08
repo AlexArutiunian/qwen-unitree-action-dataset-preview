@@ -1,0 +1,44 @@
+name: Apply ping-pong playback
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/patch_pingpong.py'
+      - '.github/workflows/apply-pingpong.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Apply source patch
+        run: python tools/patch_pingpong.py
+      - name: Install
+        working-directory: web
+        run: npm ci
+      - name: Test
+        working-directory: web
+        run: npm test
+      - name: Build and package demo
+        working-directory: web
+        run: npm run release
+      - name: Commit ping-pong playback
+        run: |
+          rm tools/patch_pingpong.py .github/workflows/apply-pingpong.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web demo tools/patch_pingpong.py .github/workflows/apply-pingpong.yml
+          git commit -m "Use smooth ping-pong action playback"
+          git push origin HEAD:main
