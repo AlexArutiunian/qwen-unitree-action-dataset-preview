@@ -175,6 +175,42 @@ function matchesAction(action, query) {
   const haystack = `${action.sample_id} ${action.source_id} ${action.split} ${action.class} ${action.augmentation_type} ${action.text}`.toLocaleLowerCase('ru');
   return haystack.includes(query);
 }
+function sourceBrowseKey(action) {
+  return action?.source_id ?? action?.sample_id;
+}
+function representativeScore(action) {
+  const augmentation = String(action?.augmentation_type || '').toLowerCase();
+  if (!augmentation || augmentation === 'original') return 0;
+  if (Number(action?.sample_id) === Number(action?.source_id)) return 1;
+  return 2;
+}
+function sourceRepresentatives() {
+  const bySource = new Map();
+  for (const action of actions) {
+    const key = String(sourceBrowseKey(action));
+    const current = bySource.get(key);
+    if (!current || representativeScore(action) < representativeScore(current) ||
+        representativeScore(action) === representativeScore(current) && action.sample_id < current.sample_id) {
+      bySource.set(key, action);
+    }
+  }
+  return [...bySource.values()].sort((a, b) => {
+    const aKey = sourceBrowseKey(a), bKey = sourceBrowseKey(b);
+    const aNumber = Number(aKey), bNumber = Number(bKey);
+    if (Number.isFinite(aNumber) && Number.isFinite(bNumber) && aNumber !== bNumber) return aNumber - bNumber;
+    return String(aKey).localeCompare(String(bKey), undefined, { numeric: true });
+  });
+}
+function browseSource(offset) {
+  const representatives = sourceRepresentatives();
+  if (!representatives.length) return;
+  const currentKey = String(sourceBrowseKey(currentAction));
+  const index = representatives.findIndex(action => String(sourceBrowseKey(action)) === currentKey);
+  const nextIndex = index + offset;
+  if (nextIndex < 0 || nextIndex >= representatives.length) return;
+  selectAction(representatives[nextIndex]);
+  populateActions();
+}
 function populateActions() {
   const query = $('actionSearch').value.trim().toLocaleLowerCase('ru');
   const split = $('splitFilter').value;
@@ -216,7 +252,7 @@ async function loadDataset() {
     const unique = new Map(loaded.map(action => [action.sample_id, action]));
     actions = [...unique.values()].sort((a, b) => a.sample_id - b.sample_id);
     $('actionSelect').disabled = false; $('actionSearch').disabled = false; $('splitFilter').disabled = false;
-    $('datasetStatus').textContent = `Загружено ${actions.length} actions · train + validation + reserved`;
+    $('datasetStatus').textContent = `Загружено ${sourceRepresentatives().length} source_id · ${actions.length} actions`;
     populateActions();
     const requested = Number(new URLSearchParams(location.search).get('action')) || 91;
     const action = unique.get(requested) || unique.get(91) || actions[0];
@@ -245,7 +281,7 @@ function initSuggestionForm() {
     status.textContent = 'Сбор команд готов, осталось подключить Google Apps Script endpoint.';
     status.classList.add('is-warning');
   } else {
-    status.textContent = 'Команда сохранится в таблицу автора проекта.';
+    status.textContent = '';
   }
 }
 async function submitSuggestion(event) {
@@ -293,7 +329,7 @@ async function submitSuggestion(event) {
     status.classList.add('is-error');
   } finally {
     submit.disabled = false;
-    submit.textContent = 'Отправить команду';
+    submit.textContent = 'Отправить';
   }
 }
 $('suggestionForm')?.addEventListener('submit', submitSuggestion);
@@ -312,12 +348,8 @@ $('seek').oninput = event => {
 };
 $('actionSearch').oninput = populateActions; $('splitFilter').onchange = populateActions;
 $('actionSelect').onchange = event => selectAction(actions.find(action => action.sample_id === Number(event.target.value)));
-$('prevAction').onclick = () => {
-  const index = actions.findIndex(action => action.sample_id === currentAction.sample_id); if (index > 0) { selectAction(actions[index - 1]); populateActions(); }
-};
-$('nextAction').onclick = () => {
-  const index = actions.findIndex(action => action.sample_id === currentAction.sample_id); if (index >= 0 && index < actions.length - 1) { selectAction(actions[index + 1]); populateActions(); }
-};
+$('prevAction').onclick = () => browseSource(-1);
+$('nextAction').onclick = () => browseSource(1);
 $('stagePrevAction').onclick = () => $('prevAction').click();
 $('stageNextAction').onclick = () => $('nextAction').click();
 for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => fit(button.dataset.view);

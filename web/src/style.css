@@ -99,3 +99,92 @@
   .suggestion-hero textarea{font-size:13px;padding-inline:9px}
   .suggestion-hero .suggestion-footer button{min-width:82px;padding-inline:9px;font-size:12px}
 }
+
+
+/* Source-id browsing + compact prompt polish v3 */
+.suggestion-hero{
+  min-height:96px;
+  padding:12px 18px;
+  gap:12px 18px;
+  background:linear-gradient(180deg,#111d2a 0%,#101a25 100%);
+  border-bottom:1px solid #3a4c61;
+  box-shadow:0 7px 22px #00000024
+}
+.suggestion-hero::before{width:3px;background:linear-gradient(180deg,#8ce0d1,#5fb8c9)}
+.suggestion-hero h2{font-size:18px;font-weight:720;color:#f3f7fb;letter-spacing:-.025em}
+.suggestion-hero form{gap:5px 9px}
+.suggestion-hero textarea{
+  height:58px;
+  min-height:58px;
+  max-height:92px;
+  border-radius:12px;
+  padding:16px 15px;
+  background:linear-gradient(180deg,#1a2a3e,#172638);
+  border:1px solid #4a6079;
+  box-shadow:inset 0 1px 0 #ffffff0d,0 3px 12px #00000020;
+  font-size:15px;
+  line-height:1.35
+}
+.suggestion-hero textarea::placeholder{color:#8fa5bb}
+.suggestion-hero textarea:focus{border-color:#8ce0d1;box-shadow:0 0 0 3px #77dfce20,inset 0 1px 0 #ffffff10}
+.suggestion-hero .suggestion-footer button{
+  height:58px;
+  min-height:58px;
+  min-width:118px;
+  border-radius:12px;
+  padding:0 18px;
+  background:linear-gradient(180deg,#91e5d6,#72d2c2);
+  border-color:#91e5d6;
+  box-shadow:0 5px 16px #45b8a52b;
+  font-weight:760
+}
+.suggestion-hero .suggestion-footer button:hover{background:linear-gradient(180deg,#a0ecdf,#82dccd)}
+.suggestion-hero .suggestion-status{min-height:0;font-size:11px}
+.suggestion-hero .suggestion-status:empty{display:none}
+
+@media(max-width:720px){
+  .suggestion-hero{
+    min-height:0;
+    padding:9px 10px 10px;
+    gap:6px;
+    background:linear-gradient(180deg,#111d2a,#101923)
+  }
+  .suggestion-hero h2{font-size:15px;line-height:1.15;font-weight:720}
+  .suggestion-hero form{gap:4px 7px}
+  .suggestion-hero textarea{
+    height:56px;
+    min-height:56px;
+    max-height:56px;
+    padding:10px 12px;
+    border-radius:11px;
+    font-size:14px;
+    line-height:1.25
+  }
+  .suggestion-hero .suggestion-footer button{
+    height:56px;
+    min-height:56px;
+    min-width:88px;
+    padding:0 12px;
+    border-radius:11px;
+    font-size:13px
+  }
+  .suggestion-hero .suggestion-status{font-size:10px;line-height:1.15}
+  .stage-title{height:108px;padding:10px 138px 8px 12px}
+  .stage-title .eyebrow{font-size:9px}
+  .stage-title h1{
+    font-size:15px;
+    line-height:1.12;
+    margin:4px 0 4px;
+    max-width:100%;
+    -webkit-line-clamp:3
+  }
+  .stage-title p{font-size:10.5px;margin:3px 0 0}
+}
+@media(max-width:380px){
+  .suggestion-hero{padding-inline:8px}
+  .suggestion-hero h2{font-size:14px}
+  .suggestion-hero textarea{font-size:13.5px;padding-inline:10px}
+  .suggestion-hero .suggestion-footer button{min-width:80px;padding-inline:9px;font-size:12px}
+  .stage-title{height:104px;padding-right:128px}
+  .stage-title h1{font-size:14px;line-height:1.1}
+}
