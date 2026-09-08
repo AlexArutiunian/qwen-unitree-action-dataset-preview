@@ -1,0 +1,66 @@
+name: Apply brighter closer WBC view v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-brighter-closer-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply stronger lighting and closer framing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('web/src/main.js')
+          s = p.read_text()
+          replacements = {
+            "  const distance = radius / Math.sin(Math.min(halfV, halfH)) * 1.12;": "  const framing = camera.aspect < 0.82 ? 1.10 : 1.03;\n  const distance = radius / Math.sin(Math.min(halfV, halfH)) * framing;",
+            "scene.add(new THREE.AmbientLight(0xe8eef4, software ? .18 : .17));": "scene.add(new THREE.AmbientLight(0xe8eef4, software ? .18 : .24));",
+            "scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x31475a, software ? .45 : .34));": "scene.add(new THREE.HemisphereLight(0xd6e2f0, 0x3b5368, software ? .45 : .44));",
+            "const light = new THREE.DirectionalLight(0xfff6ec, software ? .85 : 2.30);": "const light = new THREE.DirectionalLight(0xffffff, software ? .85 : 2.75);",
+            "headlight = new THREE.DirectionalLight(0xd4e4f0, software ? .25 : .84);": "headlight = new THREE.DirectionalLight(0xe4eef8, software ? .25 : 1.12);",
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'missing expected text: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci
+      - name: Test
+        working-directory: web
+        run: npm test
+      - name: Syntax check
+        run: node --check web/src/main.js
+      - name: Build and package demo
+        working-directory: web
+        run: npm run build
+      - name: Verify tweak
+        run: |
+          grep -q "camera.aspect < 0.82 ? 1.10 : 1.03" web/src/main.js
+          grep -q "software ? .25 : 1.12" web/src/main.js
+      - name: Remove one-shot workflow
+        run: rm -f .github/workflows/apply-brighter-closer-v2.yml
+      - name: Commit tweak
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Brighten robot lighting and move camera closer'
+          git push origin HEAD:main
