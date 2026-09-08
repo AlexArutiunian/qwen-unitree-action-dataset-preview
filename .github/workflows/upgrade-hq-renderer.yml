@@ -1,0 +1,174 @@
+name: Upgrade exact G1 renderer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upgrade-hq-renderer.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: unitreerobotics/unitree_mujoco
+          ref: 1eb6642e3f3fdfb7fb13a9794fd6a2dd93ea0e7d
+          path: _unitree_source
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install model builder
+        run: pip install -r tools/requirements-web-model.txt
+
+      - name: Patch renderer to use MuJoCo normals
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          engine = Path('web/src/engine.worker.js')
+          s = engine.read_text()
+          start = s.index('    visible = []; const geometries = [];')
+          end = s.index('    for (const file of files)', start)
+          replacement = '''    visible = []; const geometries = []; const transfers = []; let triangleCount = 0;
+    for (let id = 0; id < model.ngeom; id++) {
+      if (model.geom_group[id] !== 1) continue;
+      if (model.geom_type[id] !== 7) throw new Error(`Unsupported visual geom type ${model.geom_type[id]}`);
+      const mesh = model.geom_dataid[id];
+      const va = model.mesh_vertadr[mesh], vn = model.mesh_vertnum[mesh];
+      const fa = model.mesh_faceadr[mesh], fn = model.mesh_facenum[mesh];
+      const na = model.mesh_normaladr[mesh], nn = model.mesh_normalnum[mesh];
+      const vertices = new Float32Array(fn * 9);
+      const normals = new Float32Array(fn * 9);
+      for (let face = 0; face < fn; face++) {
+        for (let corner = 0; corner < 3; corner++) {
+          const faceSlot = (fa + face) * 3 + corner;
+          const vi = model.mesh_face[faceSlot];
+          const ni = model.mesh_facenormal[faceSlot];
+          const dst = (face * 3 + corner) * 3;
+          const srcV = (va + vi) * 3;
+          vertices[dst] = model.mesh_vert[srcV];
+          vertices[dst + 1] = model.mesh_vert[srcV + 1];
+          vertices[dst + 2] = model.mesh_vert[srcV + 2];
+          if (na >= 0 && nn > 0 && ni >= 0) {
+            const srcN = (na + ni) * 3;
+            normals[dst] = model.mesh_normal[srcN];
+            normals[dst + 1] = model.mesh_normal[srcN + 1];
+            normals[dst + 2] = model.mesh_normal[srcN + 2];
+          }
+        }
+      }
+      const rgba = new Float32Array(model.geom_rgba.subarray(id * 4, id * 4 + 4));
+      visible.push(id); triangleCount += fn;
+      geometries.push({ vertices, normals, rgba, triangleCount: fn });
+      transfers.push(vertices.buffer, normals.buffer, rgba.buffer);
+    }
+'''
+          s = s[:start] + replacement + s[end:]
+          old = "    postMessage({ type: 'ready', geometries, format: mode, compileMs: performance.now() - start, nq: model.nq, njnt: model.njnt, version: message.version });"
+          new = "    postMessage({ type: 'ready', geometries, triangles: triangleCount, format: mode, compileMs: performance.now() - start, nq: model.nq, njnt: model.njnt, version: message.version }, transfers);"
+          if old not in s:
+              raise SystemExit('ready postMessage anchor not found')
+          engine.write_text(s.replace(old, new))
+
+          main = Path('web/src/main.js')
+          s = main.read_text()
+          start = s.index('      meshes = data.geometries.map(g => {')
+          end = s.index('      if (data.version !== motionVersion)', start)
+          replacement = '''      meshes = data.geometries.map(g => {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3));
+        if (g.normals && g.normals.length === g.vertices.length) geometry.setAttribute('normal', new THREE.Float32BufferAttribute(g.normals, 3));
+        else geometry.computeVertexNormals();
+        geometry.computeBoundingSphere();
+        const color = new THREE.Color(g.rgba[0], g.rgba[1], g.rgba[2]);
+        const material = software
+          ? new THREE.MeshLambertMaterial({ color })
+          : new THREE.MeshStandardMaterial({
+              color,
+              roughness: .34,
+              metalness: .16,
+              flatShading: false,
+              transparent: g.rgba[3] < .999,
+              opacity: g.rgba[3]
+            });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.matrixAutoUpdate = false; mesh.castShadow = true; mesh.receiveShadow = true;
+        scene.add(mesh); return mesh;
+      });
+      const triangles = Number(data.triangles || 0).toLocaleString('ru-RU');
+      $('metrics').textContent = `${data.format.toUpperCase()} · HQ official mesh · ${triangles} граней · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
+'''
+          s = s[:start] + replacement + s[end:]
+          old = 'renderer.outputColorSpace = THREE.SRGBColorSpace; }'
+          new = 'renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08; }'
+          if old not in s:
+              raise SystemExit('renderer output anchor not found')
+          s = s.replace(old, new)
+          main.write_text(s)
+
+          html = Path('web/index.html')
+          s = html.read_text()
+          s = s.replace(
+            'Unitree G1 web-модель использует 29 суставов.',
+            'Unitree G1 web-модель использует 29 суставов и исходные полноразмерные visual mesh из официального Unitree MJCF без decimation.'
+          )
+          html.write_text(s)
+          PY
+
+      - name: Build exact official visual meshes
+        run: python tools/build_web_model.py _unitree_source --output web/public/model --faces-per-mesh 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Test
+        working-directory: web
+        run: npm test
+
+      - name: Build demo
+        working-directory: web
+        run: npm run release
+
+      - name: Verify exact geometry
+        run: |
+          python - <<'PY'
+          import json
+          m = json.load(open('web/public/model/manifest.json'))
+          assert m['exact_visual_meshes'] is True
+          assert m['web_faces'] == m['original_faces']
+          assert m['original_faces'] >= 370000
+          print('Exact faces:', m['web_faces'])
+          PY
+
+      - name: Remove one-shot helpers
+        run: |
+          rm -f .github/workflows/upgrade-hq-renderer.yml
+          rm -f .github/workflows/apply-pingpong.yml
+          rm -f tools/patch_pingpong.py
+          rm -rf _unitree_source
+
+      - name: Commit exact renderer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Render official full-resolution G1 geometry"
+          git push origin HEAD:main
