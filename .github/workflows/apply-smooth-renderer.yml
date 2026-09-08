@@ -1,0 +1,62 @@
+name: Apply smooth exact renderer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-smooth-renderer.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply renderer patch
+        run: python tools/patch_smooth_renderer.py
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        working-directory: web
+        run: npm ci
+
+      - name: Test
+        working-directory: web
+        run: npm test
+
+      - name: Build and package demo
+        working-directory: web
+        run: npm run release
+
+      - name: Verify renderer source
+        run: |
+          grep -q "toCreasedNormals" web/src/main.js
+          grep -q "smooth crease 50" web/src/main.js
+          grep -q "const faces = new Uint32Array" web/src/engine.worker.js
+          test -f demo/index.html
+
+      - name: Remove one-shot helpers
+        run: |
+          rm -f .github/workflows/apply-smooth-renderer.yml
+          rm -f tools/patch_smooth_renderer.py
+
+      - name: Commit renderer upgrade
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Smooth exact G1 surface shading"
+          git push origin HEAD:main
