@@ -12,7 +12,19 @@
 <div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
 <div class="transport"><button id="play" disabled>Воспроизвести</button><button id="reset" disabled>Сброс</button><output id="clock">0.00 / 1.50 с</output><input id="seek" type="range" min="0" max="1.5" step="0.001" value="0" aria-label="Позиция движения" disabled><label>Скорость <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div></section>
 <aside>
-<span class="eyebrow">ACTION</span>
+<section class="suggestion-box" aria-labelledby="suggestionHeading">
+<span class="eyebrow">ПРЕДЛОЖИТЬ ACTION</span>
+<h2 id="suggestionHeading">Что должен сделать робот?</h2>
+<p class="suggestion-help">Опиши движение рук и пояса своими словами. Ноги в этой форме не двигаем.</p>
+<form id="suggestionForm">
+<textarea id="suggestionInput" minlength="8" maxlength="500" rows="4" required aria-describedby="suggestionHelp suggestionStatus" placeholder="Например: подними левую руку вверх, правую согни перед собой и немного поверни пояс вправо"></textarea>
+<span id="suggestionHelp" class="suggestion-example">Можно писать по-русски или по-английски. Лучше описывать одно понятное действие.</span>
+<div class="suggestion-footer"><span id="suggestionCount">0 / 500</span><button id="suggestionSubmit" type="submit">Отправить команду</button></div>
+<input id="suggestionWebsite" class="suggestion-honeypot" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+<p id="suggestionStatus" class="suggestion-status" role="status"></p>
+</form>
+</section>
+<div class="divider"></div><span class="eyebrow">ACTION</span>
 <div class="action-picker">
 <input id="actionSearch" type="search" placeholder="ID, команда, class…" aria-label="Поиск action" disabled>
 <div class="picker-row"><select id="splitFilter" aria-label="Фильтр split" disabled><option value="">Все split</option><option value="train">train</option><option value="validation">validation</option><option value="reserved">reserved</option></select><span id="datasetCount">1 / 1</span></div>

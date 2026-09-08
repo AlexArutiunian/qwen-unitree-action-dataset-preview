@@ -3,6 +3,7 @@ import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { sample91 } from './sample.js';
+import { SUGGESTION_ENDPOINT } from './submission-config.js';
 import './style.css';
 
 const $ = id => document.getElementById(id);
@@ -225,6 +226,78 @@ async function loadDataset() {
     $('actionSelect').disabled = true; $('actionSearch').disabled = true; $('splitFilter').disabled = true;
   }
 }
+
+function syncSuggestionCount() {
+  const input = $('suggestionInput');
+  if (!input) return;
+  $('suggestionCount').textContent = `${input.value.length} / 500`;
+}
+function suggestionEndpointReady() {
+  return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?|$)/.test(SUGGESTION_ENDPOINT);
+}
+function initSuggestionForm() {
+  const input = $('suggestionInput'), submit = $('suggestionSubmit'), status = $('suggestionStatus');
+  if (!input || !submit || !status) return;
+  input.addEventListener('input', syncSuggestionCount);
+  syncSuggestionCount();
+  if (!suggestionEndpointReady()) {
+    submit.disabled = true;
+    status.textContent = 'Сбор команд готов, осталось подключить Google Apps Script endpoint.';
+    status.classList.add('is-warning');
+  } else {
+    status.textContent = 'Команда сохранится в таблицу автора проекта.';
+  }
+}
+async function submitSuggestion(event) {
+  event.preventDefault();
+  const input = $('suggestionInput'), submit = $('suggestionSubmit'), status = $('suggestionStatus');
+  const command = input.value.replace(/\s+/g, ' ').trim();
+  status.classList.remove('is-error', 'is-success', 'is-warning');
+  if (!suggestionEndpointReady()) {
+    status.textContent = 'Хранилище ещё не подключено.';
+    status.classList.add('is-warning');
+    return;
+  }
+  if (command.length < 8) {
+    status.textContent = 'Опиши действие чуть подробнее.';
+    status.classList.add('is-error');
+    input.focus();
+    return;
+  }
+  if (command.length > 500) {
+    status.textContent = 'Команда длиннее 500 символов.';
+    status.classList.add('is-error');
+    return;
+  }
+  const submissionId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const payload = new URLSearchParams({
+    command,
+    current_action_id: String(currentAction?.sample_id ?? ''),
+    current_action_class: String(currentAction?.class ?? ''),
+    current_action_augmentation: String(currentAction?.augmentation_type ?? ''),
+    page_url: location.href,
+    submission_id: submissionId,
+    website: $('suggestionWebsite')?.value || ''
+  });
+  submit.disabled = true;
+  submit.textContent = 'Отправляем…';
+  status.textContent = 'Сохраняем команду…';
+  try {
+    await fetch(SUGGESTION_ENDPOINT, { method: 'POST', mode: 'no-cors', body: payload });
+    input.value = '';
+    syncSuggestionCount();
+    status.textContent = 'Спасибо! Команда сохранена для будущего датасета.';
+    status.classList.add('is-success');
+  } catch (error) {
+    status.textContent = 'Не удалось отправить. Проверь соединение и попробуй ещё раз.';
+    status.classList.add('is-error');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = 'Отправить команду';
+  }
+}
+$('suggestionForm')?.addEventListener('submit', submitSuggestion);
+initSuggestionForm();
 
 $('play').onclick = toggle;
 $('stagePlay').onclick = toggle;
