@@ -38,7 +38,7 @@ jobs:
           ENDPOINT='https://script.google.com/macros/s/AKfycbwGmnY_ZoXLKCZlihSj2f3AFTSn7GtYMTSMDgpR7UnaYcZi7lkzEa5QhzxdGkTI9bBr/exec'
           curl -fsSL "$ENDPOINT" | tee /tmp/g1-endpoint-get.txt
           grep -q 'G1 suggestion collector is running' /tmp/g1-endpoint-get.txt
-          curl -fsSL -X POST "$ENDPOINT" \
+          curl -fsSL "$ENDPOINT" \
             --data-urlencode 'command=TEST ChatGPT endpoint connection - ignore for training' \
             --data-urlencode 'current_action_id=91' \
             --data-urlencode 'current_action_class=basic_pose_control' \
