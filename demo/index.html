@@ -1,11 +1,14 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Action browser · MuJoCo</title>  <script type="module" crossorigin src="./assets/index-7W6zziRC.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C7z4S3Dd.css">
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Action browser · MuJoCo</title>  <script type="module" crossorigin src="./assets/index-CF4sVvbx.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Cl6IWyW6.css">
 </head>
 <body><div id="app">
 <header><a href="../">G1 / MOTION LAB</a><span>MuJoCo 3.12.0 · 1626 actions</span><strong id="status" role="status">Подготовка…</strong></header>
 <main><section class="stage"><div class="stage-title"><span class="eyebrow" id="sampleLabel">SAMPLE 00091</span><h1 id="stageCommand">Выполни шире и выразительнее: левую руку вверх, правую руку вбок</h1><p id="stageMeta">train · basic_pose_control · intensity_large</p></div>
 <div id="viewport" aria-label="Интерактивная 3D-модель Unitree G1"></div>
+<button id="stagePlay" class="stage-play" type="button" disabled aria-label="Воспроизвести" aria-pressed="false" title="Воспроизвести">
+<svg viewBox="0 0 32 32" aria-hidden="true"><path class="icon-play" d="M11 7.5v17l14-8.5z"/><g class="icon-pause"><rect x="9" y="7" width="5" height="18" rx="1"/><rect x="18" y="7" width="5" height="18" rx="1"/></g></svg>
+</button>
 <div id="fallback"><img id="referenceImage" src="./sample-91-mujoco-comparison.png" alt="Desktop MuJoCo reference sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
 <div class="camera"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="back">Сзади</button><button data-view="fit">Вписать</button></div>
 <div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
@@ -19,5 +22,5 @@
 <div class="action-nav"><button id="prevAction" title="Предыдущий action">← Пред.</button><button id="nextAction" title="Следующий action">След. →</button></div>
 <small id="datasetStatus">Загрузка полного датасета…</small>
 </div>
-<div class="divider"></div><span class="eyebrow">КОМАНДА</span><p id="command"></p><div class="divider"></div><span class="eyebrow">СУСТАВЫ · ГРАДУСЫ</span><table><thead><tr><th>Сустав</th><th>Сейчас</th><th>Финал</th></tr></thead><tbody id="joints"></tbody></table><p id="check" role="status">Ожидание модели</p><details><summary>Motion JSON</summary><pre id="json"></pre></details><details><summary>О модели и проверке</summary><p>Unitree G1 web-модель использует 29 суставов. Если action содержит суставы Inspire Hand, action всё равно загружается, но пальцы помечаются как не визуализируемые.</p><p>Углы записываются в qpos; MuJoCo вычисляет положение геометрии через mj_forward. Физическое управление не используется.</p><p id="metrics"></p><a id="referenceLink" href="./sample-91-mujoco-comparison.png" target="_blank">Desktop-референс #91</a> · <a href="./model/LICENSE">Лицензия модели</a></details><p class="shortcuts">Пробел: старт / пауза<br>R: сброс · ← →: ±0,1 с</p></aside>
+<div class="divider"></div><span class="eyebrow">КОМАНДА</span><p id="command"></p><div class="divider"></div><span class="eyebrow">СУСТАВЫ · ГРАДУСЫ</span><table><thead><tr><th>Сустав</th><th>Сейчас</th><th>Финал</th></tr></thead><tbody id="joints"></tbody></table><p id="check" role="status">Ожидание модели</p><details><summary>Motion JSON</summary><pre id="json"></pre></details><details><summary>О модели и проверке</summary><p>Unitree G1 web-модель использует 29 суставов. Если action содержит суставы Inspire Hand, action всё равно загружается, но пальцы помечаются как не визуализируемые.</p><p>Углы записываются в qpos; MuJoCo вычисляет положение геометрии через mj_forward. Физическое управление не используется.</p><p>После загрузки action движение запускается автоматически и повторяется по кругу. Кнопка ▶ / Ⅱ сверху ставит воспроизведение на паузу и возобновляет его.</p><p id="metrics"></p><a id="referenceLink" href="./sample-91-mujoco-comparison.png" target="_blank">Desktop-референс #91</a> · <a href="./model/LICENSE">Лицензия модели</a></details><p class="shortcuts">Пробел: старт / пауза<br>R: сброс · ← →: ±0,1 с</p></aside>
 </main></div></body></html>
