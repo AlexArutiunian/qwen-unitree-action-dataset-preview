@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { sample91 } from './sample.js';
 import './style.css';
@@ -20,8 +19,8 @@ const labels = {
 
 let actions = [fallbackAction], currentAction = fallbackAction, targets = [], cells = new Map(), unsupported = new Set();
 let worker, timer, playing = false, playbackDirection = 1, time = 0, duration = 1.5, ready = false, modelReady = false, busy = false, wanted = 0, motionVersion = 1;
-let renderer, scene, camera, controls, meshes = [], bounds, initialValues, environmentTexture, software = false, animationId, dirty = true;
-const matrix = new THREE.Matrix4(), center = new THREE.Vector3(), direction = new THREE.Vector3(3, -2, 0.9);
+let renderer, scene, camera, controls, meshes = [], bounds, initialValues, software = false, animationId, dirty = true, headlight;
+const matrix = new THREE.Matrix4(), center = new THREE.Vector3(), direction = new THREE.Vector3(3, -2, 0.9), headlightDirection = new THREE.Vector3();
 
 function padId(id) { return String(id).padStart(5, '0'); }
 function normalizeCommand(text = '') { return text.replace(/^\s*Command\s*:\s*/i, '').trim(); }
@@ -286,19 +285,26 @@ function start() {
         }
         geometry.computeBoundingSphere();
 
-        // MuJoCo visual rgba values are authored as display colors. Convert
-        // from sRGB into Three.js' linear working space so 0.2 stays dark
-        // instead of looking like a washed-out mid gray.
-        const color = new THREE.Color().setRGB(g.rgba[0], g.rgba[1], g.rgba[2], THREE.SRGBColorSpace);
+        // WBC-style material mapping. Keep MuJoCo's authored two-tone
+        // palette, but bias it slightly darker/cooler so the 0.7 shell reads
+        // as technical silver-gray instead of white plastic.
+        const luma = 0.2126 * g.rgba[0] + 0.7152 * g.rgba[1] + 0.0722 * g.rgba[2];
+        const grayScale = luma > .35 ? .88 : .80;
+        const color = new THREE.Color().setRGB(
+          Math.min(1, g.rgba[0] * grayScale),
+          Math.min(1, g.rgba[1] * grayScale),
+          Math.min(1, g.rgba[2] * grayScale),
+          THREE.SRGBColorSpace
+        );
+        const shininess = luma > .35 ? .68 : .48;
         const material = software
           ? new THREE.MeshLambertMaterial({ color })
           : new THREE.MeshPhysicalMaterial({
               color,
-              roughness: .5,
-              metalness: .05,
-              clearcoat: .08,
-              clearcoatRoughness: .55,
-              envMapIntensity: .45,
+              roughness: 1 - shininess,
+              metalness: 0,
+              specularIntensity: .46,
+              specularColor: new THREE.Color(0xd4e4f0),
               flatShading: false,
               transparent: g.rgba[3] < .999,
               opacity: g.rgba[3]
@@ -311,7 +317,7 @@ function start() {
         return mesh;
       });
       const triangles = Number(data.triangles || 0).toLocaleString('ru-RU');
-      $('metrics').textContent = `${data.format.toUpperCase()} · exact official mesh · ${triangles} граней · smooth crease 50° · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
+      $('metrics').textContent = `${data.format.toUpperCase()} · exact official mesh · ${triangles} граней · smooth crease 50° · WBC gray · ${data.compileMs.toFixed(0)} мс · ${meshes.length} деталей · nq=${data.nq}`;
       if (data.version !== motionVersion) worker.postMessage({ type: 'loadMotion', program: currentAction.program, version: motionVersion });
     }
     if (data.type === 'motionReady') {
@@ -354,26 +360,26 @@ function start() {
 
 renderActionInfo(); populateActions(); syncPlaybackUi();
 try {
-  scene = new THREE.Scene(); scene.fog = new THREE.Fog('#121a24', 9, 22);
+  scene = new THREE.Scene(); scene.fog = new THREE.Fog('#16283a', 20, 60);
   camera = new THREE.PerspectiveCamera(36, 1, .01, 100); camera.up.set(0, 0, 1);
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('webgl2', { antialias: true, alpha: true });
-  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .86; }
+  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping; }
   else { software = true; renderer = new SVGRenderer(); renderer.setQuality('low'); renderer.setClearColor(0x17212e); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; }
   $('viewport').append(renderer.domElement);
-  if (!software) {
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    environmentTexture = pmrem.fromScene(new RoomEnvironment(), .04).texture;
-    scene.environment = environmentTexture;
-    pmrem.dispose();
-  }
   renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); fail('WebGL-контекст потерян. Обновите страницу.'); });
   controls = new OrbitControls(camera, renderer.domElement); controls.addEventListener('change', () => { dirty = true; }); controls.enableDamping = true; controls.dampingFactor = .08;
-  scene.add(new THREE.HemisphereLight(0xcbdcff, 0x36465e, software ? .65 : .82));
-  const light = new THREE.DirectionalLight(0xffffff, software ? .8 : 1.35); light.position.set(3, -4, 6); light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; scene.add(light);
-  const rim = new THREE.DirectionalLight(0x7ecde8, software ? .3 : .42); rim.position.set(-3, 3, 4); scene.add(rim);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x192331, roughness: .9 })); floor.position.z = -.007; floor.receiveShadow = true; if (!software) scene.add(floor);
-  const grid = new THREE.GridHelper(12, 60, 0x43586d, 0x263647); grid.rotation.x = Math.PI / 2; grid.position.z = -.005; if (software) { grid.material.vertexColors = false; grid.material.color.set(0x314154); } scene.add(grid);
+  // Lighting follows the WBC viewer: low ambient, an overhead MuJoCo-like
+  // key, cool floor bounce and a soft camera headlight. No HDR environment
+  // and no filmic tone mapping, so gray body panels keep their separation.
+  scene.add(new THREE.AmbientLight(0xe8eef4, software ? .18 : .14));
+  scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x31475a, software ? .45 : .28));
+  const light = new THREE.DirectionalLight(0xfff6ec, software ? .85 : 2.05);
+  light.position.set(1.2, -.5, 5.6); light.target.position.set(0, 0, .9); scene.add(light.target);
+  light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; light.shadow.bias = -.0002; light.shadow.normalBias = .02; scene.add(light);
+  headlight = new THREE.DirectionalLight(0xd4e4f0, software ? .25 : .72); headlight.castShadow = false; scene.add(headlight.target); scene.add(headlight);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x2a455c, roughness: .96, metalness: 0 })); floor.position.z = -.007; floor.receiveShadow = true; if (!software) scene.add(floor);
+  const grid = new THREE.GridHelper(12, 60, 0x429eb0, 0x2f7a8a); grid.rotation.x = Math.PI / 2; grid.position.z = -.005; if (software) { grid.material.vertexColors = false; grid.material.color.set(0x395668); } scene.add(grid);
   new ResizeObserver(() => {
     const { width, height } = $('viewport').getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); fit('fit');
   }).observe($('viewport'));
@@ -383,9 +389,10 @@ try {
     if (playing && ready && duration > 0) {
       requestPose(pingPongTime(elapsed * Number($('speed').value)));
     }
+    if (headlight) { camera.getWorldDirection(headlightDirection); headlight.position.copy(camera.position); headlight.target.position.copy(camera.position).add(headlightDirection); headlight.target.updateMatrixWorld(); }
     controls.update(); if (dirty) { renderer.render(scene, camera); dirty = false; } animationId = requestAnimationFrame(animate);
   }
   animationId = requestAnimationFrame(animate);
   $('retry').onclick = start; start(); loadDataset();
 } catch (error) { fail(`Интерактивный просмотр недоступен: ${error.message}`); loadDataset(); }
-window.addEventListener('pagehide', () => { worker?.terminate(); clearTimeout(timer); cancelAnimationFrame(animationId); environmentTexture?.dispose(); });
+window.addEventListener('pagehide', () => { worker?.terminate(); clearTimeout(timer); cancelAnimationFrame(animationId); });
