@@ -3,7 +3,7 @@ name: Build action browser demo
 on:
   push:
     branches:
-      - feature/action-browser-1626
+      - main
     paths:
       - 'web/**'
       - 'tools/package_demo.mjs'
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/action-browser-1626
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -42,5 +42,5 @@ jobs:
             echo "demo/ already up to date"
             exit 0
           fi
-          git commit -m "Build 1626-action demo [skip ci]"
-          git push origin HEAD:feature/action-browser-1626
+          git commit -m "Rebuild action browser demo [skip ci]"
+          git push origin HEAD:main
