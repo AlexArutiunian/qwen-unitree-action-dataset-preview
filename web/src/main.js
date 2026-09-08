@@ -124,7 +124,7 @@ function fit(view) {
   const size = bounds.getSize(new THREE.Vector3()); bounds.getCenter(center);
   const radius = Math.max(0.25, size.length() / 2);
   const halfV = THREE.MathUtils.degToRad(camera.fov / 2), halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-  const distance = radius / Math.sin(Math.min(halfV, halfH)) * 1.22;
+  const distance = radius / Math.sin(Math.min(halfV, halfH)) * 1.12;
   camera.position.copy(center).addScaledVector(direction.normalize(), distance);
   camera.near = .01; camera.far = Math.max(100, distance * 10); camera.updateProjectionMatrix();
   controls.target.copy(center); controls.minDistance = radius * .5; controls.maxDistance = distance * 5; controls.update();
@@ -372,12 +372,12 @@ try {
   // Lighting follows the WBC viewer: low ambient, an overhead MuJoCo-like
   // key, cool floor bounce and a soft camera headlight. No HDR environment
   // and no filmic tone mapping, so gray body panels keep their separation.
-  scene.add(new THREE.AmbientLight(0xe8eef4, software ? .18 : .14));
-  scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x31475a, software ? .45 : .28));
-  const light = new THREE.DirectionalLight(0xfff6ec, software ? .85 : 2.05);
+  scene.add(new THREE.AmbientLight(0xe8eef4, software ? .18 : .17));
+  scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x31475a, software ? .45 : .34));
+  const light = new THREE.DirectionalLight(0xfff6ec, software ? .85 : 2.30);
   light.position.set(1.2, -.5, 5.6); light.target.position.set(0, 0, .9); scene.add(light.target);
   light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; light.shadow.bias = -.0002; light.shadow.normalBias = .02; scene.add(light);
-  headlight = new THREE.DirectionalLight(0xd4e4f0, software ? .25 : .72); headlight.castShadow = false; scene.add(headlight.target); scene.add(headlight);
+  headlight = new THREE.DirectionalLight(0xd4e4f0, software ? .25 : .84); headlight.castShadow = false; scene.add(headlight.target); scene.add(headlight);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x2a455c, roughness: .96, metalness: 0 })); floor.position.z = -.007; floor.receiveShadow = true; if (!software) scene.add(floor);
   const grid = new THREE.GridHelper(12, 60, 0x429eb0, 0x2f7a8a); grid.rotation.x = Math.PI / 2; grid.position.z = -.005; if (software) { grid.material.vertexColors = false; grid.material.color.set(0x395668); } scene.add(grid);
   new ResizeObserver(() => {
