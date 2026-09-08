@@ -286,16 +286,19 @@ function start() {
         }
         geometry.computeBoundingSphere();
 
-        const color = new THREE.Color(g.rgba[0], g.rgba[1], g.rgba[2]);
+        // MuJoCo visual rgba values are authored as display colors. Convert
+        // from sRGB into Three.js' linear working space so 0.2 stays dark
+        // instead of looking like a washed-out mid gray.
+        const color = new THREE.Color().setRGB(g.rgba[0], g.rgba[1], g.rgba[2], THREE.SRGBColorSpace);
         const material = software
           ? new THREE.MeshLambertMaterial({ color })
           : new THREE.MeshPhysicalMaterial({
               color,
-              roughness: .42,
-              metalness: .08,
-              clearcoat: .16,
-              clearcoatRoughness: .48,
-              envMapIntensity: .9,
+              roughness: .5,
+              metalness: .05,
+              clearcoat: .08,
+              clearcoatRoughness: .55,
+              envMapIntensity: .45,
               flatShading: false,
               transparent: g.rgba[3] < .999,
               opacity: g.rgba[3]
@@ -355,7 +358,7 @@ try {
   camera = new THREE.PerspectiveCamera(36, 1, .01, 100); camera.up.set(0, 0, 1);
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('webgl2', { antialias: true, alpha: true });
-  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08; }
+  if (context) { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .86; }
   else { software = true; renderer = new SVGRenderer(); renderer.setQuality('low'); renderer.setClearColor(0x17212e); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; }
   $('viewport').append(renderer.domElement);
   if (!software) {
@@ -366,9 +369,9 @@ try {
   }
   renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); fail('WebGL-контекст потерян. Обновите страницу.'); });
   controls = new OrbitControls(camera, renderer.domElement); controls.addEventListener('change', () => { dirty = true; }); controls.enableDamping = true; controls.dampingFactor = .08;
-  scene.add(new THREE.HemisphereLight(0xcbdcff, 0x36465e, software ? .65 : 1.05));
-  const light = new THREE.DirectionalLight(0xffffff, software ? .8 : 1.85); light.position.set(3, -4, 6); light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; scene.add(light);
-  const rim = new THREE.DirectionalLight(0x7ecde8, software ? .3 : .75); rim.position.set(-3, 3, 4); scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xcbdcff, 0x36465e, software ? .65 : .82));
+  const light = new THREE.DirectionalLight(0xffffff, software ? .8 : 1.35); light.position.set(3, -4, 6); light.castShadow = true; light.shadow.mapSize.set(2048, 2048); light.shadow.camera.left = -3; light.shadow.camera.right = 3; light.shadow.camera.top = 3; light.shadow.camera.bottom = -3; scene.add(light);
+  const rim = new THREE.DirectionalLight(0x7ecde8, software ? .3 : .42); rim.position.set(-3, 3, 4); scene.add(rim);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x192331, roughness: .9 })); floor.position.z = -.007; floor.receiveShadow = true; if (!software) scene.add(floor);
   const grid = new THREE.GridHelper(12, 60, 0x43586d, 0x263647); grid.rotation.x = Math.PI / 2; grid.position.z = -.005; if (software) { grid.material.vertexColors = false; grid.material.color.set(0x314154); } scene.add(grid);
   new ResizeObserver(() => {
