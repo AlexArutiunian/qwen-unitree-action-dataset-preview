@@ -1,14 +1,23 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Motion 91 · MuJoCo</title>  <script type="module" crossorigin src="./assets/index-D3yB-Pbg.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-7FnlA7gd.css">
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>G1 · Action browser · MuJoCo</title>  <script type="module" crossorigin src="./assets/index-7W6zziRC.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-C7z4S3Dd.css">
 </head>
 <body><div id="app">
-<header><a href="../">G1 / MOTION LAB</a><span>MuJoCo 3.12.0 · Forward kinematics</span><strong id="status" role="status">Подготовка…</strong></header>
-<main><section class="stage"><div class="stage-title"><span class="eyebrow">SAMPLE 00091</span><h1>Левую руку вверх.<br>Правую руку вбок.</h1><p>Шире и выразительнее · 1,5 с</p></div>
+<header><a href="../">G1 / MOTION LAB</a><span>MuJoCo 3.12.0 · 1626 actions</span><strong id="status" role="status">Подготовка…</strong></header>
+<main><section class="stage"><div class="stage-title"><span class="eyebrow" id="sampleLabel">SAMPLE 00091</span><h1 id="stageCommand">Выполни шире и выразительнее: левую руку вверх, правую руку вбок</h1><p id="stageMeta">train · basic_pose_control · intensity_large</p></div>
 <div id="viewport" aria-label="Интерактивная 3D-модель Unitree G1"></div>
-<div id="fallback"><img src="./sample-91-mujoco-comparison.png" alt="Настоящий desktop MuJoCo референс sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
+<div id="fallback"><img id="referenceImage" src="./sample-91-mujoco-comparison.png" alt="Desktop MuJoCo reference sample 91"><p id="loading">Загрузка интерактивной модели…</p><button id="retry" hidden>Повторить загрузку</button></div>
 <div class="camera"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="back">Сзади</button><button data-view="fit">Вписать</button></div>
 <div class="hint">Мышь: вращение · Колесо: масштаб · Правая кнопка: сдвиг</div>
 <div class="transport"><button id="play" disabled>Воспроизвести</button><button id="reset" disabled>Сброс</button><output id="clock">0.00 / 1.50 с</output><input id="seek" type="range" min="0" max="1.5" step="0.001" value="0" aria-label="Позиция движения" disabled><label>Скорость <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div></section>
-<aside><span class="eyebrow">КОМАНДА</span><p id="command"></p><div class="divider"></div><span class="eyebrow">СУСТАВЫ · ГРАДУСЫ</span><table><thead><tr><th>Сустав</th><th>Сейчас</th><th>Цель</th></tr></thead><tbody id="joints"></tbody></table><p id="check" role="status">Ожидание модели</p><details><summary>Motion JSON</summary><pre id="json"></pre></details><details><summary>О модели и проверке</summary><p>Официальная Unitree G1, 29 суставов, упрощённые визуальные сетки. Пальцы Inspire из локального референса не включены.</p><p>Углы записываются в qpos; MuJoCo вычисляет положение геометрии через mj_forward. Физическое управление не используется.</p><p id="metrics"></p><a href="./sample-91-mujoco-comparison.png" target="_blank">Desktop-референс</a> · <a href="./model/LICENSE">Лицензия модели</a></details><p class="shortcuts">Пробел: старт / пауза<br>R: сброс · ← →: ±0,1 с</p></aside>
+<aside>
+<span class="eyebrow">ACTION</span>
+<div class="action-picker">
+<input id="actionSearch" type="search" placeholder="ID, команда, class…" aria-label="Поиск action" disabled>
+<div class="picker-row"><select id="splitFilter" aria-label="Фильтр split" disabled><option value="">Все split</option><option value="train">train</option><option value="validation">validation</option><option value="reserved">reserved</option></select><span id="datasetCount">1 / 1</span></div>
+<select id="actionSelect" aria-label="Выбор action" disabled><option value="91">#00091 · train · intensity_large</option></select>
+<div class="action-nav"><button id="prevAction" title="Предыдущий action">← Пред.</button><button id="nextAction" title="Следующий action">След. →</button></div>
+<small id="datasetStatus">Загрузка полного датасета…</small>
+</div>
+<div class="divider"></div><span class="eyebrow">КОМАНДА</span><p id="command"></p><div class="divider"></div><span class="eyebrow">СУСТАВЫ · ГРАДУСЫ</span><table><thead><tr><th>Сустав</th><th>Сейчас</th><th>Финал</th></tr></thead><tbody id="joints"></tbody></table><p id="check" role="status">Ожидание модели</p><details><summary>Motion JSON</summary><pre id="json"></pre></details><details><summary>О модели и проверке</summary><p>Unitree G1 web-модель использует 29 суставов. Если action содержит суставы Inspire Hand, action всё равно загружается, но пальцы помечаются как не визуализируемые.</p><p>Углы записываются в qpos; MuJoCo вычисляет положение геометрии через mj_forward. Физическое управление не используется.</p><p id="metrics"></p><a id="referenceLink" href="./sample-91-mujoco-comparison.png" target="_blank">Desktop-референс #91</a> · <a href="./model/LICENSE">Лицензия модели</a></details><p class="shortcuts">Пробел: старт / пауза<br>R: сброс · ← →: ±0,1 с</p></aside>
 </main></div></body></html>
