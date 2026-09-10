@@ -21,6 +21,7 @@ const labels = {
 let actions = [fallbackAction], currentAction = fallbackAction, targets = [], cells = new Map(), unsupported = new Set();
 let worker, timer, playing = false, playbackDirection = 1, time = 0, duration = 1.5, ready = false, modelReady = false, busy = false, wanted = 0, motionVersion = 1;
 let renderer, scene, camera, controls, meshes = [], bounds, initialValues, software = false, animationId, dirty = true, headlight;
+let manualJointSpecs = [], manualPoseValues = {}, lastPoseValues = {}, manualPoseActive = false;
 const matrix = new THREE.Matrix4(), center = new THREE.Vector3(), direction = new THREE.Vector3(3, -2, 0.9), headlightDirection = new THREE.Vector3();
 
 function padId(id) { return String(id).padStart(5, '0'); }
@@ -61,6 +62,61 @@ function collectTargets(program) {
 function jointLabel(name) {
   if (labels[name]) return labels[name];
   return name.replace(/_joint$/, '').replaceAll('_', ' ');
+}
+function buildManualPoseControls(specs = []) {
+  manualJointSpecs = specs.filter(spec => labels[spec.name]);
+  const host = $('manualPoseControls');
+  if (!host) return;
+  host.replaceChildren();
+  manualPoseValues = Object.fromEntries(manualJointSpecs.map(spec => [spec.name, spec.initial]));
+  for (const spec of manualJointSpecs) {
+    const row = document.createElement('label'); row.className = 'manual-joint-row';
+    const name = document.createElement('span'); name.className = 'manual-joint-name'; name.textContent = jointLabel(spec.name); name.title = spec.name;
+    const input = document.createElement('input'); input.type = 'range'; input.min = spec.min.toFixed(1); input.max = spec.max.toFixed(1); input.step = '0.5'; input.value = spec.initial.toFixed(1); input.dataset.joint = spec.name;
+    const output = document.createElement('output'); output.textContent = `${spec.initial.toFixed(1)}°`; output.dataset.jointValue = spec.name;
+    input.addEventListener('input', () => {
+      manualPoseActive = true;
+      playing = false; syncPlaybackUi();
+      manualPoseValues[spec.name] = Number(input.value);
+      output.textContent = `${Number(input.value).toFixed(1)}°`;
+      if (modelReady) worker.postMessage({ type: 'manualPose', values: manualPoseValues, time: wanted, version: motionVersion });
+    });
+    row.append(name, input, output); host.append(row);
+  }
+  const empty = $('manualPoseEmpty');
+  if (empty) empty.hidden = manualJointSpecs.length > 0;
+}
+function syncManualPoseControls(values) {
+  if (!values || manualPoseActive) return;
+  lastPoseValues = values;
+  for (const spec of manualJointSpecs) {
+    const value = Number(values[spec.name]);
+    if (!Number.isFinite(value)) continue;
+    manualPoseValues[spec.name] = value;
+    const input = document.querySelector(`#manualPoseControls input[data-joint="${spec.name}"]`);
+    const output = document.querySelector(`#manualPoseControls output[data-joint-value="${spec.name}"]`);
+    if (input) input.value = String(Math.max(Number(input.min), Math.min(Number(input.max), value)));
+    if (output) output.textContent = `${value.toFixed(1)}°`;
+  }
+}
+function setManualNeutral() {
+  if (!manualJointSpecs.length || !modelReady) return;
+  manualPoseActive = true; playing = false; syncPlaybackUi();
+  manualPoseValues = Object.fromEntries(manualJointSpecs.map(spec => [spec.name, spec.initial]));
+  for (const spec of manualJointSpecs) {
+    const input = document.querySelector(`#manualPoseControls input[data-joint="${spec.name}"]`);
+    const output = document.querySelector(`#manualPoseControls output[data-joint-value="${spec.name}"]`);
+    if (input) input.value = spec.initial.toFixed(1);
+    if (output) output.textContent = `${spec.initial.toFixed(1)}°`;
+  }
+  worker.postMessage({ type: 'manualPose', values: manualPoseValues, time: wanted, version: motionVersion });
+}
+function restoreActionMotion() {
+  if (!modelReady) return;
+  manualPoseActive = false; playing = false; syncPlaybackUi();
+  motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; initialValues = null;
+  setControls(false); clock(); $('check').textContent = 'Возвращаем action…';
+  worker.postMessage({ type: 'loadMotion', program: currentAction.program, version: motionVersion });
 }
 function rebuildJointTable() {
   targets = collectTargets(currentAction.program);
@@ -162,7 +218,7 @@ function pingPongTime(delta) {
 
 function selectAction(action, updateUrl = true) {
   if (!action || action.sample_id === currentAction.sample_id && action.program === currentAction.program) return;
-  currentAction = action; motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; playbackDirection = 1; initialValues = null; unsupported = new Set();
+  currentAction = action; motionVersion += 1; ready = false; busy = false; wanted = 0; time = 0; duration = 0; playbackDirection = 1; initialValues = null; unsupported = new Set(); manualPoseActive = false;
   playing = false; syncPlaybackUi(); setControls(false); renderActionInfo(); clock();
   $('check').textContent = 'Подготовка motion…'; $('status').textContent = `Action #${currentAction.sample_id}`;
   if (updateUrl) {
@@ -172,8 +228,13 @@ function selectAction(action, updateUrl = true) {
 }
 function matchesAction(action, query) {
   if (!query) return true;
+  const normalized = query.trim().toLocaleLowerCase('ru');
+  if (/^\d+$/.test(normalized)) {
+    const id = Number(normalized);
+    return Number(action.sample_id) === id || Number(action.source_id) === id;
+  }
   const haystack = `${action.sample_id} ${action.source_id} ${action.split} ${action.class} ${action.augmentation_type} ${action.text}`.toLocaleLowerCase('ru');
-  return haystack.includes(query);
+  return haystack.includes(normalized);
 }
 function sourceBrowseKey(action) {
   return action?.source_id ?? action?.sample_id;
@@ -220,6 +281,7 @@ function populateActions() {
     const option = document.createElement('option'); option.value = String(action.sample_id); option.textContent = actionTitle(action); select.append(option);
   }
   if (visible.some(action => action.sample_id === currentAction.sample_id)) select.value = String(currentAction.sample_id);
+  else if (visible.length) select.selectedIndex = 0;
   else select.selectedIndex = -1;
   $('datasetCount').textContent = `${visible.length} / ${actions.length}`;
 }
@@ -347,11 +409,21 @@ $('seek').oninput = event => {
   requestPose(value);
 };
 $('actionSearch').oninput = populateActions; $('splitFilter').onchange = populateActions;
+$('actionSearch').addEventListener('keydown', event => {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  const first = $('actionSelect').selectedOptions[0];
+  if (!first) return;
+  const action = actions.find(item => item.sample_id === Number(first.value));
+  if (action) selectAction(action);
+});
 $('actionSelect').onchange = event => selectAction(actions.find(action => action.sample_id === Number(event.target.value)));
 $('prevAction').onclick = () => browseSource(-1);
 $('nextAction').onclick = () => browseSource(1);
 $('stagePrevAction').onclick = () => $('prevAction').click();
 $('stageNextAction').onclick = () => $('nextAction').click();
+$('manualPoseNeutral')?.addEventListener('click', setManualNeutral);
+$('manualPoseRestore')?.addEventListener('click', restoreActionMotion);
 for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => fit(button.dataset.view);
 document.addEventListener('keydown', event => {
   if (/INPUT|SELECT|TEXTAREA|BUTTON|SUMMARY/.test(event.target.tagName) || event.target.isContentEditable) return;
@@ -373,7 +445,7 @@ function start() {
     if (data.type === 'status') { $('status').textContent = data.text; $('loading').textContent = data.text; }
     if (data.type === 'error') fail(data.text);
     if (data.type === 'ready') {
-      clearTimeout(timer); modelReady = true;
+      clearTimeout(timer); modelReady = true; buildManualPoseControls(data.manualJoints || []);
       meshes = data.geometries.map(g => {
         const indexed = new THREE.BufferGeometry();
         indexed.setAttribute('position', new THREE.Float32BufferAttribute(g.vertices, 3));
@@ -448,17 +520,23 @@ function start() {
         meshes[i].matrix.copy(matrix); meshes[i].matrixWorldNeedsUpdate = true;
       }
       if (!initialValues) initialValues = data.values;
+      if (data.manual) { lastPoseValues = data.values; manualPoseValues = { ...manualPoseValues, ...Object.fromEntries(manualJointSpecs.map(spec => [spec.name, data.values[spec.name]]).filter(([, value]) => Number.isFinite(value))) }; }
+      else syncManualPoseControls(data.values);
       for (const joint of targets) {
         const cell = cells.get(joint.name); if (!cell) continue;
         const value = data.values[joint.name]; cell.actual.textContent = Number.isFinite(value) ? value.toFixed(1) : '—';
       }
-      const supportedTargets = targets.filter(joint => Number.isFinite(data.values[joint.name]));
-      const targetNames = new Set(supportedTargets.map(joint => joint.name));
-      const neutral = Object.entries(data.values).every(([name, value]) => targetNames.has(name) || Math.abs(value - initialValues[name]) < 1e-8);
-      const errors = supportedTargets.map(joint => Math.abs(data.values[joint.name] - joint.angle));
-      const error = errors.length ? Math.max(...errors) : 0;
-      const handNote = unsupported.size ? ` · ${unsupported.size} Inspire Hand вне web-модели` : '';
-      $('check').textContent = data.time >= duration ? `Цель: ошибка ${error.toFixed(6)}° · Остальные суставы ${neutral ? 'не изменены' : 'ИЗМЕНЕНЫ'}${handNote}` : `Плавная интерполяция · Остальные суставы в qpos0${handNote}`;
+      if (data.manual) {
+        $('check').textContent = 'Ручная поза · двигаются только руки и пояс · ноги в нейтрали';
+      } else {
+        const supportedTargets = targets.filter(joint => Number.isFinite(data.values[joint.name]));
+        const targetNames = new Set(supportedTargets.map(joint => joint.name));
+        const neutral = Object.entries(data.values).every(([name, value]) => targetNames.has(name) || Math.abs(value - initialValues[name]) < 1e-8);
+        const errors = supportedTargets.map(joint => Math.abs(data.values[joint.name] - joint.angle));
+        const error = errors.length ? Math.max(...errors) : 0;
+        const handNote = unsupported.size ? ` · ${unsupported.size} Inspire Hand вне web-модели` : '';
+        $('check').textContent = data.time >= duration ? `Цель: ошибка ${error.toFixed(6)}° · Остальные суставы ${neutral ? 'не изменены' : 'ИЗМЕНЕНЫ'}${handNote}` : `Плавная интерполяция · Остальные суставы в qpos0${handNote}`;
+      }
       $('fallback').hidden = true; busy = false;
       if (Math.abs(wanted - data.time) > 1e-6) requestPose(wanted);
     }

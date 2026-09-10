@@ -3,6 +3,11 @@ import wasmUrl from '@mujoco/mujoco/mujoco.wasm?url';
 import { compile, poseAt } from './timeline.js';
 
 let mj, model, data, timeline, joints, visible, initial;
+const MANUAL_JOINTS = new Set([
+  'waist_yaw_joint','waist_roll_joint','waist_pitch_joint',
+  'left_shoulder_pitch_joint','left_shoulder_roll_joint','left_shoulder_yaw_joint','left_elbow_joint','left_wrist_roll_joint','left_wrist_pitch_joint','left_wrist_yaw_joint',
+  'right_shoulder_pitch_joint','right_shoulder_roll_joint','right_shoulder_yaw_joint','right_elbow_joint','right_wrist_roll_joint','right_wrist_pitch_joint','right_wrist_yaw_joint'
+]);
 let currentVersion = 0, initializing = false, pendingMotion = null;
 const status = text => postMessage({ type: 'status', text });
 
@@ -53,6 +58,35 @@ function sendPose(time) {
   const values = Object.fromEntries(joints.map(joint => [joint.name, data.qpos[joint.address] * 180 / Math.PI]));
   postMessage({ type: 'pose', time, version: currentVersion, transforms, values }, [transforms.buffer]);
 }
+function manualJointSpecs() {
+  return joints.filter(joint => MANUAL_JOINTS.has(joint.name)).map(joint => {
+    const limited = Boolean(model.jnt_limited[joint.id]);
+    const min = limited ? model.jnt_range[joint.id * 2] : -Math.PI;
+    const max = limited ? model.jnt_range[joint.id * 2 + 1] : Math.PI;
+    return { name: joint.name, min: min * 180 / Math.PI, max: max * 180 / Math.PI, initial: model.qpos0[joint.address] * 180 / Math.PI };
+  });
+}
+function sendManualPose(values = {}, time = 0, version = currentVersion) {
+  data.qpos.set(model.qpos0);
+  for (const joint of joints) {
+    if (!MANUAL_JOINTS.has(joint.name)) continue;
+    const raw = Number(values[joint.name]);
+    if (!Number.isFinite(raw)) continue;
+    const limited = Boolean(model.jnt_limited[joint.id]);
+    const min = limited ? model.jnt_range[joint.id * 2] : -Math.PI;
+    const max = limited ? model.jnt_range[joint.id * 2 + 1] : Math.PI;
+    const radians = Math.max(min, Math.min(max, raw * Math.PI / 180));
+    data.qpos[joint.address] = radians;
+  }
+  mj.mj_forward(model, data);
+  const transforms = new Float64Array(visible.length * 12);
+  for (let i = 0; i < visible.length; i++) {
+    const id = visible[i]; transforms.set(data.geom_xpos.subarray(id * 3, id * 3 + 3), i * 12);
+    transforms.set(data.geom_xmat.subarray(id * 9, id * 9 + 9), i * 12 + 3);
+  }
+  const poseValues = Object.fromEntries(joints.map(joint => [joint.name, data.qpos[joint.address] * 180 / Math.PI]));
+  postMessage({ type: 'pose', time, version, transforms, values: poseValues, manual: true }, [transforms.buffer]);
+}
 function loadMotion(program, version) {
   const supported = new Set(joints.map(joint => joint.name)), skipped = new Set();
   const safeProgram = sanitizeProgram(program, supported, skipped);
@@ -66,6 +100,10 @@ self.onmessage = async ({ data: message }) => {
   try {
     if (message.type === 'seek') {
       if (data && timeline && message.version === currentVersion) sendPose(message.time);
+      return;
+    }
+    if (message.type === 'manualPose') {
+      if (data && model && !initializing && message.version === currentVersion) sendManualPose(message.values, message.time, message.version);
       return;
     }
     if (message.type === 'loadMotion') {
@@ -100,7 +138,7 @@ self.onmessage = async ({ data: message }) => {
     for (let id = 0; id < model.njnt; id++) {
       if (model.jnt_type[id] !== 3) continue;
       const name = mj.mj_id2name(model, mj.mjtObj.mjOBJ_JOINT.value, id);
-      if (name) joints.push({ name, address: model.jnt_qposadr[id] });
+      if (name) joints.push({ name, address: model.jnt_qposadr[id], id });
     }
     initial = Object.fromEntries(joints.map(joint => [joint.name, model.qpos0[joint.address]]));
     mj.mj_forward(model, data);
@@ -129,7 +167,7 @@ self.onmessage = async ({ data: message }) => {
     }
     for (const file of files) mj.FS.unlink(`/model/${file.replace(/\.gz$/, '')}`);
     initializing = false;
-    postMessage({ type: 'ready', geometries, triangles: triangleCount, format: mode, compileMs: performance.now() - start, nq: model.nq, njnt: model.njnt, version: message.version }, transfers);
+    postMessage({ type: 'ready', geometries, triangles: triangleCount, format: mode, compileMs: performance.now() - start, nq: model.nq, njnt: model.njnt, manualJoints: manualJointSpecs(), version: message.version }, transfers);
     const motion = pendingMotion || { program: message.program, version: message.version };
     pendingMotion = null; loadMotion(motion.program, motion.version);
   } catch (error) { initializing = false; postMessage({ type: 'error', text: error?.message || String(error) }); }
