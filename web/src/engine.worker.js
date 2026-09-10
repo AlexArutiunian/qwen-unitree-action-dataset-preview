@@ -58,11 +58,15 @@ function sendPose(time) {
   const values = Object.fromEntries(joints.map(joint => [joint.name, data.qpos[joint.address] * 180 / Math.PI]));
   postMessage({ type: 'pose', time, version: currentVersion, transforms, values }, [transforms.buffer]);
 }
+function jointRange(joint) {
+  const min = Number(model.jnt_range[joint.id * 2]);
+  const max = Number(model.jnt_range[joint.id * 2 + 1]);
+  if (Number.isFinite(min) && Number.isFinite(max) && max > min) return [min, max];
+  return [-Math.PI, Math.PI];
+}
 function manualJointSpecs() {
   return joints.filter(joint => MANUAL_JOINTS.has(joint.name)).map(joint => {
-    const limited = Boolean(model.jnt_limited[joint.id]);
-    const min = limited ? model.jnt_range[joint.id * 2] : -Math.PI;
-    const max = limited ? model.jnt_range[joint.id * 2 + 1] : Math.PI;
+    const [min, max] = jointRange(joint);
     return { name: joint.name, min: min * 180 / Math.PI, max: max * 180 / Math.PI, initial: model.qpos0[joint.address] * 180 / Math.PI };
   });
 }
@@ -72,9 +76,7 @@ function sendManualPose(values = {}, time = 0, version = currentVersion) {
     if (!MANUAL_JOINTS.has(joint.name)) continue;
     const raw = Number(values[joint.name]);
     if (!Number.isFinite(raw)) continue;
-    const limited = Boolean(model.jnt_limited[joint.id]);
-    const min = limited ? model.jnt_range[joint.id * 2] : -Math.PI;
-    const max = limited ? model.jnt_range[joint.id * 2 + 1] : Math.PI;
+    const [min, max] = jointRange(joint);
     const radians = Math.max(min, Math.min(max, raw * Math.PI / 180));
     data.qpos[joint.address] = radians;
   }
